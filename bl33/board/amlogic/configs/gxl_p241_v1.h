@@ -42,7 +42,7 @@
 #define CONFIG_VDDEE_SLEEP_VOLTAGE	 850		// voltage for suspend
 
 /* configs for CEC */
-#define CONFIG_CEC_OSD_NAME		"Mbox"
+#define CONFIG_CEC_OSD_NAME		"AML-S805X-AC"
 #define CONFIG_CEC_WAKEUP
 
 #define CONFIG_INSTABOOT
@@ -331,12 +331,12 @@
 #define CONFIG_SYS_BOOTM_LEN (64<<20) /* Increase max gunzip size*/
 
 /* cpu */
-#define CONFIG_CPU_CLK					1000 //MHz. Range: 600-1800, should be multiple of 24
+#define CONFIG_CPU_CLK					1200 //MHz. Range: 600-1800, should be multiple of 24
 
 /* ddr */
-#define CONFIG_DDR_SIZE					1024 //MB //0 means ddr size auto-detect
+#define CONFIG_DDR_SIZE					0 //MB //0 means ddr size auto-detect
 #define CONFIG_DDR_CLK					912  //MHz, Range: 384-1200, should be multiple of 24
-#define CONFIG_DDR4_CLK					912  //MHz, for boards which use different ddr chip
+#define CONFIG_DDR4_CLK					1200  //MHz, for boards which use different ddr chip
 /* DDR type setting
  *    CONFIG_DDR_TYPE_LPDDR3   : LPDDR3
  *    CONFIG_DDR_TYPE_DDR3     : DDR3
@@ -349,7 +349,7 @@
  *    CONFIG_DDR0_16BIT        : DDR0 16bit mode
  *    CONFIG_DDR_CHL_AUTO      : auto detect RANK0 / RANK0+1 */
 #define CONFIG_DDR_CHANNEL_SET			CONFIG_DDR0_16BIT //CONFIG_DDR_CHL_AUTO
-#define CONFIG_DDR_FULL_TEST			0 //1 for ddr full test
+#define CONFIG_DDR_FULL_TEST			1 //1 for ddr full test
 #define CONFIG_NR_DRAM_BANKS			1
 /* ddr functions */
 #define CONFIG_CMD_DDR_D2PLL			0 //0:disable, 1:enable. d2pll cmd
@@ -359,6 +359,7 @@
 #define CONFIG_DDR_USE_EXT_VREF			0 //0:disable, 1:enable. ddr use external vref
 #define CONFIG_DDR4_TIMING_TEST			0 //0:disable, 1:enable. ddr4 timing test function
 #define CONFIG_DDR_PLL_BYPASS			0 //0:disable, 1:enable. ddr pll bypass function
+#define CONFIG_DDR_FUNC_PRINT_WINDOW	1 //0:disable, 1:enable. print ddr training window
 #define CONFIG_DDR_FUNC_RDBI			1 //0:disable, 1:enable. low power consumption and upgrade stability
 
 /* storage: emmc/nand/sd */
