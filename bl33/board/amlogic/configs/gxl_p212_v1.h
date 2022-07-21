@@ -355,7 +355,7 @@
  *    CONFIG_DDR0_16BIT        : DDR0 16bit mode
  *    CONFIG_DDR_CHL_AUTO      : auto detect RANK0 / RANK0+1 */
 #define CONFIG_DDR_CHANNEL_SET			CONFIG_DDR_CHL_AUTO
-#define CONFIG_DDR_FULL_TEST			1 //1 for ddr full test
+#define CONFIG_DDR_FULL_TEST			0 //1 for ddr full test
 #define CONFIG_NR_DRAM_BANKS			1
 /* ddr functions */
 #define CONFIG_CMD_DDR_D2PLL			0 //0:disable, 1:enable. d2pll cmd
