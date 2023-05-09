@@ -77,7 +77,7 @@
 //#define CONFIG_AML_IRDETECT_EARLY
 #define CONFIG_IR_REMOTE_POWER_UP_KEY_CNT 4
 #define CONFIG_IR_REMOTE_USE_PROTOCOL 0         // 0:nec  1:duokan  2:Toshiba 3:rca 4:rcmm
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL1 0XE51AFB04 //amlogic tv ir --- power
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL1 0xe31cdf00 //amlogic tv ir --- power
 #define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL2 0Xffffffff //amlogic tv ir --- ch+
 #define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL3 0xffffffff //amlogic tv ir --- ch-
 #define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL4 0xBA45BD02
@@ -336,7 +336,7 @@
 /* ddr */
 #define CONFIG_DDR_SIZE					0 //MB //0 means ddr size auto-detect
 #define CONFIG_DDR_CLK					912  //MHz, Range: 384-1200, should be multiple of 24
-#define CONFIG_DDR4_CLK					1080  //MHz, for boards which use different ddr chip
+#define CONFIG_DDR4_CLK					1200  //MHz, for boards which use different ddr chip
 /* DDR type setting
  *    CONFIG_DDR_TYPE_LPDDR3   : LPDDR3
  *    CONFIG_DDR_TYPE_DDR3     : DDR3
@@ -349,7 +349,7 @@
  *    CONFIG_DDR0_16BIT        : DDR0 16bit mode
  *    CONFIG_DDR_CHL_AUTO      : auto detect RANK0 / RANK0+1 */
 #define CONFIG_DDR_CHANNEL_SET			CONFIG_DDR0_16BIT //CONFIG_DDR_CHL_AUTO
-#define CONFIG_DDR_FULL_TEST			1 //1 for ddr full test
+#define CONFIG_DDR_FULL_TEST			0 //1 for ddr full test
 #define CONFIG_NR_DRAM_BANKS			1
 /* ddr functions */
 #define CONFIG_CMD_DDR_D2PLL			0 //0:disable, 1:enable. d2pll cmd
@@ -359,7 +359,7 @@
 #define CONFIG_DDR_USE_EXT_VREF			0 //0:disable, 1:enable. ddr use external vref
 #define CONFIG_DDR4_TIMING_TEST			0 //0:disable, 1:enable. ddr4 timing test function
 #define CONFIG_DDR_PLL_BYPASS			0 //0:disable, 1:enable. ddr pll bypass function
-#define CONFIG_DDR_FUNC_PRINT_WINDOW	1 //0:disable, 1:enable. print ddr training window
+#define CONFIG_DDR_FUNC_PRINT_WINDOW	0 //0:disable, 1:enable. print ddr training window
 #define CONFIG_DDR_FUNC_RDBI			1 //0:disable, 1:enable. low power consumption and upgrade stability
 
 /* storage: emmc/nand/sd */
@@ -442,7 +442,7 @@
 
 /* vpu */
 #define CONFIG_AML_VPU 1
-#define CONFIG_VPU_CLK_LEVEL_DFT 2
+#define CONFIG_VPU_CLK_LEVEL_DFT 7
 
 /* DISPLAY & HDMITX */
 #define CONFIG_AML_HDMITX20 1
