@@ -154,8 +154,10 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 {
 	struct wakeup_info *p = (struct wakeup_info *)response;
 	unsigned val;
+#ifdef CONFIG_BT_WAKEUP
 	struct wakeup_gpio_info *gpio;
 	unsigned i = 0;
+#endif
 
 	p->status = RESPONSE_OK;
 	val = (AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC |
