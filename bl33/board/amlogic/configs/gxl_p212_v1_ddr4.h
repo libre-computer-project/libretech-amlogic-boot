@@ -44,7 +44,7 @@
 /* configs for CEC */
 #define CONFIG_CEC_OSD_NAME		"AML-S905X-CC"
 #define CONFIG_CEC_WAKEUP
-#define CONFIG_BT_WAKEUP
+//#define CONFIG_BT_WAKEUP
 #define CONFIG_INSTABOOT
 /* configs for dtb in boot.img */
 //#define DTB_BIND_KERNEL
@@ -355,7 +355,7 @@
  *    CONFIG_DDR0_16BIT        : DDR0 16bit mode
  *    CONFIG_DDR_CHL_AUTO      : auto detect RANK0 / RANK0+1 */
 #define CONFIG_DDR_CHANNEL_SET			CONFIG_DDR0_RANK0
-#define CONFIG_DDR_FULL_TEST			1 //1 for ddr full test
+#define CONFIG_DDR_FULL_TEST			0 //1 for ddr full test
 #define CONFIG_NR_DRAM_BANKS			1
 /* ddr functions */
 #define CONFIG_CMD_DDR_D2PLL			0 //0:disable, 1:enable. d2pll cmd
@@ -363,7 +363,7 @@
 #define CONFIG_DDR_LOW_POWER			0 //0:disable, 1:enable. ddr clk gate for lp
 #define CONFIG_DDR_ZQ_PD				0 //0:disable, 1:enable. ddr zq power down
 #define CONFIG_DDR_USE_EXT_VREF			0 //0:disable, 1:enable. ddr use external vref
-#define CONFIG_DDR_FUNC_PRINT_WINDOW	1 //0:disable, 1:enable. print ddr training window
+#define CONFIG_DDR_FUNC_PRINT_WINDOW	0 //0:disable, 1:enable. print ddr training window
 #define CONFIG_DDR_FUNC_RDBI			1 //0:disable, 1:enable. low power consumption and upgrade stability
 
 /* storage: emmc/nand/sd */
