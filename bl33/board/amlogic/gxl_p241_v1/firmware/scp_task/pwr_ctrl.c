@@ -158,7 +158,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	unsigned i = 0;
 
 	p->status = RESPONSE_OK;
-	val = (POWER_KEY_WAKEUP_SRC | AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC |
+	val = (AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC |
 	       ETH_PHY_WAKEUP_SRC | BT_WAKEUP_SRC);
 #ifdef CONFIG_CEC_WAKEUP
 	if (suspend_from != SYS_POWEROFF)
@@ -166,17 +166,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 #endif
 	p->sources = val;
 
-	/* Power Key: AO_GPIO[3]*/
-	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
-	gpio->gpio_in_idx = GPIOAO_2;
-	gpio->gpio_in_ao = 1;
-	gpio->gpio_out_idx = -1;
-	gpio->gpio_out_ao = -1;
-	gpio->irq = IRQ_AO_GPIO0_NUM;
-	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
-	p->gpio_info_count = ++i;
-
+#ifdef CONFIG_BT_WAKEUP
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = BT_WAKEUP_SRC;
 	gpio->gpio_in_idx = GPIOX_13;
@@ -186,6 +176,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->irq = IRQ_GPIO0_NUM;
 	gpio->trig_type	= GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
+#endif
 }
 void wakeup_timer_setup(void)
 {
@@ -271,6 +262,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 			if ((readl(AO_GPIO_I) & (1<<2)) == 0)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
+#ifdef CONFIG_BT_WAKEUP
 		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;
 			if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 13))
@@ -278,6 +270,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 				&& !(readl(PREG_PAD_GPIO4_EN_N) & (0x01 << 12)))
 				exit_reason = BT_WAKEUP;
 		}
+#endif
 		if (irq[IRQ_ETH_PHY] == IRQ_ETH_PHY_NUM) {
 			irq[IRQ_ETH_PHY] = 0xFFFFFFFF;
 				exit_reason = ETH_PHY_WAKEUP;
