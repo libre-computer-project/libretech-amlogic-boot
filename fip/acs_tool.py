@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 # uncompyle6 version 3.2.4
 # Python bytecode 2.7 (62211)
 # Decompiled from: Python 3.6.7 (default, Nov  3 2018, 21:32:46) 
