@@ -44,7 +44,8 @@
 /* configs for CEC */
 #define CONFIG_CEC_OSD_NAME		"AML-S905X-CC-V2"
 #define CONFIG_CEC_WAKEUP
-//#define CONFIG_BT_WAKEUP
+#define CONFIG_BT_WAKEUP
+#define CONFIG_WIFI_WAKEUP
 #define CONFIG_INSTABOOT
 /* configs for dtb in boot.img */
 //#define DTB_BIND_KERNEL
@@ -80,12 +81,12 @@
 //#define CONFIG_AML_IRDETECT_EARLY
 #define CONFIG_IR_REMOTE_POWER_UP_KEY_CNT 4
 #define CONFIG_IR_REMOTE_USE_PROTOCOL 0         // 0:nec  1:duokan  2:Toshiba 3:rca 4:rcmm
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL1 0XE51AFB04 //amlogic tv ir --- power
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL2 0Xffffffff //amlogic tv ir --- ch+
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL3 0xffffffff //amlogic tv ir --- ch-
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL4 0xBA45BD02
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL1 0xe31cdf00 //amlogic tv ir --- power
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL2 0xe31adf00 //amlogic tv ir --- ch+
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL3 0xe348df00 //amlogic tv ir --- ch-
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL4 0xe306df00
 
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL5 0xffffffff
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL5 0xe3f1df00
 /* args/envs */
 #define CONFIG_SYS_MAXARGS  64
 #define CONFIG_EXTRA_ENV_SETTINGS \
