@@ -44,7 +44,8 @@
 /* configs for CEC */
 #define CONFIG_CEC_OSD_NAME		"AML-S805X-AC"
 #define CONFIG_CEC_WAKEUP
-
+#define CONFIG_BT_WAKEUP
+#define CONFIG_WIFI_WAKEUP
 #define CONFIG_INSTABOOT
 #define CONFIG_CMD_BOOTCTOL_AVB
 
@@ -77,12 +78,12 @@
 //#define CONFIG_AML_IRDETECT_EARLY
 #define CONFIG_IR_REMOTE_POWER_UP_KEY_CNT 4
 #define CONFIG_IR_REMOTE_USE_PROTOCOL 0         // 0:nec  1:duokan  2:Toshiba 3:rca 4:rcmm
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL1 0xE51AFB04 //amlogic tv ir --- power
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL2 0Xffffffff //amlogic tv ir --- ch+
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL3 0xffffffff //amlogic tv ir --- ch-
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL4 0xBA45BD02
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL1 0xe31cdf00 //amlogic tv ir --- power
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL2 0xe31adf00 //amlogic tv ir --- ch+
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL3 0xe348df00 //amlogic tv ir --- ch-
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL4 0xe306df00
 
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL5 0xffffffff
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL5 0xe3f1df00
 /* args/envs */
 #define CONFIG_SYS_MAXARGS  64
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -342,7 +343,7 @@
  *    CONFIG_DDR_TYPE_DDR3     : DDR3
  *    CONFIG_DDR_TYPE_DDR4     : DDR4
  *    CONFIG_DDR_TYPE_AUTO     : DDR3/DDR4 auto detect */
-#define CONFIG_DDR_TYPE					CONFIG_DDR_TYPE_DDR4//CONFIG_DDR_TYPE_AUTO
+#define CONFIG_DDR_TYPE					CONFIG_DDR_TYPE_DDR4 //CONFIG_DDR_TYPE_AUTO
 /* DDR channel setting, please refer hardware design.
  *    CONFIG_DDR0_RANK0        : DDR0 rank0
  *    CONFIG_DDR0_RANK01       : DDR0 rank0+1
