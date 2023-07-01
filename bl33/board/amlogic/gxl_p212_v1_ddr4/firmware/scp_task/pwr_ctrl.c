@@ -208,6 +208,16 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type	= GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 #endif
+	/* Power Key: GPIOH_6*/
+	gpio = &(p->gpio_info[i]);
+	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+	gpio->gpio_in_idx = GPIOH_6;
+	gpio->gpio_in_ao = 0;
+	gpio->gpio_out_idx = -1;
+	gpio->gpio_out_ao = -1;
+	gpio->irq = IRQ_GPIO3_NUM;
+	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+	p->gpio_info_count = ++i;
 }
 void wakeup_timer_setup(void)
 {
@@ -317,6 +327,12 @@ static unsigned int detect_key(unsigned int suspend_from)
 				exit_reason = WIFI_WAKEUP;
 		}
 #endif
+		if (irq[IRQ_GPIO3] == IRQ_GPIO3_NUM) {
+			uart_puts("irq gpio3\n");
+			irq[IRQ_GPIO3] = 0xFFFFFFFF;
+			if ((readl(PREG_PAD_GPIO1_I) & (0x01 << 26)) == 0)
+				exit_reason = POWER_KEY_WAKEUP;
+		}
 		if (irq[IRQ_ETH_PHY] == IRQ_ETH_PHY_NUM) {
 			uart_puts("irq eth\n");
 			irq[IRQ_ETH_PHY] = 0xFFFFFFFF;
