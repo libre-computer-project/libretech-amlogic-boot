@@ -177,6 +177,9 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	p->sources = val;
 
+	uart_puts("boot_11 disable nor_d pinmux\n");
+	writel(readl(P_PERIPHS_PIN_MUX_7) & (~(0x01<<13)), P_PERIPHS_PIN_MUX_7);
+
 	/* Power Key: BOOT[11]*/
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
