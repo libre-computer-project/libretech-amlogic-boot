@@ -69,7 +69,7 @@ void pwm_set_voltage(unsigned int id, unsigned int voltage)
 	case pwm_b:
 		uart_puts("set vddee to 0x");
 		uart_put_hex(pwm_voltage_table[to][1], 16);
-		uart_puts("mv\n");
+		uart_puts(" mv\n");
 		P_PWM_PWM_B = pwm_voltage_table[to][0];
 		break;
 
@@ -83,7 +83,7 @@ void pwm_set_voltage(unsigned int id, unsigned int voltage)
 	case pwm_f:
 		uart_puts("set vdd_cpu a to 0x");
 		uart_put_hex(pwm_voltage_table[to][1], 16);
-		uart_puts("mv\n");
+		uart_puts(" mv\n");
 		P_PWM_PWM_F = pwm_voltage_table[to][0];
 		break;
 	default:
@@ -175,11 +175,22 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	p->status = RESPONSE_OK;
 	//val = (POWER_KEY_WAKEUP_SRC | AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC);
 	val = (POWER_KEY_WAKEUP_SRC | AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC |
-	       ETH_PHY_WAKEUP_SRC | BT_WAKEUP_SRC);
+	       ETH_PHY_WAKEUP_SRC);
 #ifdef CONFIG_CEC_WAKEUP
 	if (suspend_from != SYS_POWEROFF)
 		val |= CEC_WAKEUP_SRC;
 #endif
+
+#ifdef CONFIG_BT_WAKEUP
+	if (suspend_from != SYS_POWEROFF)
+		val |= BT_WAKEUP_SRC;
+#endif
+
+#ifdef CONFIG_WIFI_WAKEUP
+	if (suspend_from != SYS_POWEROFF)
+		val |= WIFI_WAKEUP_SRC;
+#endif
+
 	p->sources = val;
 
 	/* Power Key: AO_GPIO[3]*/
@@ -195,15 +206,28 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	//p->gpio_info_count = 1;
 	p->gpio_info_count = ++i;
 
+#ifdef CONFIG_BT_WAKEUP
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = BT_WAKEUP_SRC;
 	gpio->gpio_in_idx = GPIOX_18;
 	gpio->gpio_in_ao = 0;
-	gpio->gpio_out_idx = -1;
-	gpio->gpio_out_ao = -1;
-	gpio->irq = IRQ_GPIO0_NUM;
+	gpio->gpio_out_idx = GPIOX_17;
+	gpio->gpio_out_ao = 0;
+	gpio->irq = IRQ_GPIO1_NUM;
 	gpio->trig_type	= GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
+#endif
+#ifdef CONFIG_WIFI_WAKEUP
+	gpio = &(p->gpio_info[i]);
+	gpio->wakeup_id = WIFI_WAKEUP_SRC;
+	gpio->gpio_in_idx = GPIOX_7;
+	gpio->gpio_in_ao = 0;
+	gpio->gpio_out_idx = GPIOX_6;
+	gpio->gpio_out_ao = 0;
+	gpio->irq = IRQ_GPIO2_NUM;
+	gpio->trig_type	= GPIO_IRQ_FALLING_EDGE;
+	p->gpio_info_count = ++i;
+#endif
 }
 void wakeup_timer_setup(void)
 {
@@ -248,6 +272,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 	do {
 #ifdef CONFIG_CEC_WAKEUP
 		if (irq[IRQ_AO_CEC] == IRQ_AO_CEC_NUM) {
+			uart_puts("irq cec\n");
 			irq[IRQ_AO_CEC] = 0xFFFFFFFF;
 			if (suspend_from == SYS_POWEROFF)
 				continue;
@@ -265,6 +290,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 		}
 #endif
 		if (irq[IRQ_TIMERA] == IRQ_TIMERA_NUM) {
+			uart_puts("irq timera\n");
 			irq[IRQ_TIMERA] = 0xFFFFFFFF;
 			if (time_out_ms != 0)
 				time_out_ms--;
@@ -275,6 +301,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 		}
 
 		if (irq[IRQ_AO_IR_DEC] == IRQ_AO_IR_DEC_NUM) {
+			uart_puts("irq aoir\n");
 			irq[IRQ_AO_IR_DEC] = 0xFFFFFFFF;
 			ret = remote_detect_key();
 			if (ret == 1)
@@ -284,18 +311,33 @@ static unsigned int detect_key(unsigned int suspend_from)
 		}
 
 		if (irq[IRQ_AO_GPIO0] == IRQ_AO_GPIO0_NUM) {
+			uart_puts("irq aogpio0\n");
 			irq[IRQ_AO_GPIO0] = 0xFFFFFFFF;
 			if ((readl(AO_GPIO_I) & (1<<2)) == 0)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
-		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
-		    irq[IRQ_GPIO0] = 0xFFFFFFFF;
+#ifdef CONFIG_BT_WAKEUP
+		if (irq[IRQ_GPIO1] == IRQ_GPIO1_NUM) {
+			uart_puts("irq gpio1\n");
+			irq[IRQ_GPIO1] = 0xFFFFFFFF;
 			if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 18))
 				&& (readl(PREG_PAD_GPIO4_O) & (0x01 << 17))
 				&& !(readl(PREG_PAD_GPIO4_EN_N) & (0x01 << 17)))
 				exit_reason = BT_WAKEUP;
 		}
+#endif
+#ifdef CONFIG_WIFI_WAKEUP
+		if (irq[IRQ_GPIO2] == IRQ_GPIO2_NUM) {
+			uart_puts("irq gpio2\n");
+			irq[IRQ_GPIO2] = 0xFFFFFFFF;
+			if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 7))
+				&& (readl(PREG_PAD_GPIO4_O) & (0x01 << 6))
+				&& !(readl(PREG_PAD_GPIO4_EN_N) & (0x01 << 6)))
+				exit_reason = WIFI_WAKEUP;
+		}
+#endif
 		if (irq[IRQ_ETH_PHY] == IRQ_ETH_PHY_NUM) {
+			uart_puts("irq eth\n");
 			irq[IRQ_ETH_PHY] = 0xFFFFFFFF;
 			exit_reason = ETH_PHY_WAKEUP;
 		}

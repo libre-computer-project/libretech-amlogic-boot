@@ -45,6 +45,8 @@
 /* configs for CEC */
 #define CONFIG_CEC_OSD_NAME		"AML-S905D-PC"
 #define CONFIG_CEC_WAKEUP
+#define CONFIG_BT_WAKEUP
+#define CONFIG_WIFI_WAKEUP
 
 #define CONFIG_INSTABOOT
 
@@ -75,12 +77,12 @@
 //#define CONFIG_AML_IRDETECT_EARLY
 #define CONFIG_IR_REMOTE_POWER_UP_KEY_CNT 4
 #define CONFIG_IR_REMOTE_USE_PROTOCOL 0         // 0:nec  1:duokan  2:Toshiba 3:rca 4:rcmm
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL1 0XE51AFB04 //amlogic tv ir --- power
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL2 0Xffffffff //amlogic tv ir --- ch+
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL3 0xffffffff //amlogic tv ir --- ch-
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL4 0xBA45BD02
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL1 0xe31cdf00 //amlogic tv ir --- power
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL2 0xe31adf00 //amlogic tv ir --- ch+
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL3 0xe348df00 //amlogic tv ir --- ch-
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL4 0xe306df00
 
-#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL5 0xffffffff
+#define CONFIG_IR_REMOTE_POWER_UP_KEY_VAL5 0xe3f1df00
 /* args/envs */
 #define CONFIG_SYS_MAXARGS  64
 #define CONFIG_EXTRA_ENV_SETTINGS \
@@ -348,7 +350,7 @@
  *    CONFIG_DDR_CHL_AUTO      : auto detect RANK0 / RANK0+1 */
 #define CONFIG_DDR_CHANNEL_SET			CONFIG_DDR0_RANK01
 /* ddr functions */
-#define CONFIG_DDR_FULL_TEST			1 //0:disable, 1:enable. ddr full test
+#define CONFIG_DDR_FULL_TEST			0 //0:disable, 1:enable. ddr full test
 #define CONFIG_CMD_DDR_D2PLL			0 //0:disable, 1:enable. d2pll cmd
 #define CONFIG_CMD_DDR_TEST				0 //0:disable, 1:enable. ddrtest cmd
 #define CONFIG_DDR_LOW_POWER			0 //0:disable, 1:enable. ddr clk gate for lp
@@ -356,7 +358,7 @@
 #define CONFIG_DDR_USE_EXT_VREF			0 //0:disable, 1:enable. ddr use external vref
 #define CONFIG_DDR4_TIMING_TEST			0 //0:disable, 1:enable. ddr4 timing test function
 #define CONFIG_DDR_PLL_BYPASS			0 //0:disable, 1:enable. ddr pll bypass function
-#define CONFIG_DDR_FUNC_PRINT_WINDOW	1 //0:disable, 1:enable. print ddr training window
+#define CONFIG_DDR_FUNC_PRINT_WINDOW	0 //0:disable, 1:enable. print ddr training window
 #define CONFIG_DDR_FUNC_RDBI			1 //0:disable, 1:enable. low power consumption and upgrade stability
 
 /* storage: emmc/nand/sd */
