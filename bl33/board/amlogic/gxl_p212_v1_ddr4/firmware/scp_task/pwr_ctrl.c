@@ -341,9 +341,11 @@ static unsigned int detect_key(unsigned int suspend_from)
 			irq[IRQ_ETH_PHY] = 0xFFFFFFFF;
 				exit_reason = ETH_PHY_WAKEUP;
 		}
-		if (exit_reason)
+		if (exit_reason){
+			uart_puts("boot_11 enable nor_d pinmux\n");
+			writel(readl(P_PERIPHS_PIN_MUX_7) | (0x01<<13), P_PERIPHS_PIN_MUX_7);
 			break;
-		else
+		} else
 			asm volatile("wfi");
 	} while (1);
 
