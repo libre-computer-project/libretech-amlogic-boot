@@ -22,6 +22,7 @@
 #define __GXBB_BL31_APIS_H
 
 #include <asm/arch/io.h>
+#include <amlogic/image_check.h>
 
 /*#define SRAM_READ				0x82000010
 #define CORE_RD_REV1			0x82000011
@@ -51,6 +52,8 @@
 #define EFUSE_WRITE				0x82000031
 #define EFUSE_WRITE_PATTERN		0x82000032
 #define EFUSE_USER_MAX    0x82000033
+#define EFUSE_OBJ_READ    0x8200003B
+#define EFUSE_OBJ_WRITE   0x8200003C
 
 #define DEBUG_EFUSE_WRITE_PATTERN	0x820000F0
 #define DEBUG_EFUSE_READ_PATTERN	0x820000F1
@@ -82,6 +85,8 @@
 #define SECURITY_KEY_GET_ENCTYPE	0x8200006B
 #define SECURITY_KEY_VERSION		0x8200006C
 
+/* KEYMASTER */
+#define SET_BOOT_PARAMS		0x82000072
 
 /* Secure HAL APIs */
 #define TRUSTZONE_HAL_API_SRAM                  0x400
@@ -137,4 +142,5 @@ void aml_system_off(void);
 
 void bl31_get_chipid(unsigned int *, unsigned int *,
 	unsigned int *, unsigned int *);
+int32_t set_boot_params(const keymaster_boot_params*);
 #endif

@@ -241,6 +241,10 @@ static unsigned int detect_key(unsigned int suspend_from)
 		wakeup_timer_setup();
 
 	init_remote();
+#ifndef CONFIG_CEC_WAKEUP
+	hdmi_cec_func_config = 0;
+#endif
+	remote_cec_hw_reset();
 #ifdef CONFIG_CEC_WAKEUP
 	if (hdmi_cec_func_config & 0x1) {
 		remote_cec_hw_reset();
@@ -254,8 +258,6 @@ static unsigned int detect_key(unsigned int suspend_from)
 		if (irq[IRQ_AO_CEC] == IRQ_AO_CEC_NUM) {
 			uart_puts("irq cec\n");
 			irq[IRQ_AO_CEC] = 0xFFFFFFFF;
-			if (suspend_from == SYS_POWEROFF)
-				continue;
 			if (cec_msg.log_addr) {
 				if (hdmi_cec_func_config & 0x1) {
 					cec_handler();

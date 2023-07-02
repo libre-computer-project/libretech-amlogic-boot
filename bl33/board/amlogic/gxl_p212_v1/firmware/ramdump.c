@@ -32,22 +32,30 @@ struct ram_compress_full __ramdump_data = {
 			.phy_addr      = (void *)CONFIG_COMPRESSED_DATA_ADDR,
 			.section_size  = CONFIG_DDR_TOTAL_SIZE -
 					 CONFIG_COMPRESSED_DATA_ADDR,
-			.section_index = 4,
+			.section_index = 5,
 			.compress_type = RAM_COMPRESS_NORMAL,
 		},
 		{
-			/* memory before bl2 */
+			/* memory in reserved bottom */
 			.phy_addr      = (void *)CONFIG_COMPRESS_START_ADDR,
-			.section_size  = CONFIG_BL2_IGNORE_ADDR -
-					 CONFIG_COMPRESS_START_ADDR,
+			.section_size  = CONFIG_1ST_RESERVED_SIZE,
 			.section_index = 1,
+			.compress_type = RAM_COMPRESS_SET,
+			.set_value     = 0x0,
+		},
+		{
+			/* memory before bl2 */
+			.phy_addr      = (void *)CONFIG_1ST_RESERVED_END,
+			.section_size  = CONFIG_BL2_IGNORE_ADDR -
+					 CONFIG_1ST_RESERVED_END,
+			.section_index = 2,
 			.compress_type = RAM_COMPRESS_NORMAL,
 		},
 		{
 			/* memory in reserved bl2 */
 			.phy_addr      = (void *)CONFIG_BL2_IGNORE_ADDR,
 			.section_size  = CONFIG_BL2_IGNORE_SIZE,
-			.section_index = 2,
+			.section_index = 3,
 			.compress_type = RAM_COMPRESS_SET,
 			.set_value     = 0x0,
 		},
@@ -56,7 +64,7 @@ struct ram_compress_full __ramdump_data = {
 			.phy_addr      = (void *)CONFIG_SEG4_ADDR,
 			.section_size  = CONFIG_COMPRESSED_DATA_ADDR -
 					 CONFIG_SEG4_ADDR,
-			.section_index = 3,
+			.section_index = 4,
 			.compress_type = RAM_COMPRESS_NORMAL,
 		}
 	},
