@@ -181,12 +181,12 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	boot_pinmux = readl(P_PERIPHS_PIN_MUX_7);
 	if (boot_pinmux & (0x01<<13)){
-		uart_puts("boot_11 save state pull up\n");
 		writel(boot_pinmux & (~(0x01<<13)), P_PERIPHS_PIN_MUX_7);
 		boot_pullen = readl(P_PAD_PULL_UP_EN_REG2);
 		writel(boot_pullen | (0x01<<11), P_PAD_PULL_UP_EN_REG2);
 		boot_pullup = readl(P_PAD_PULL_UP_REG2);
 		writel(boot_pullup | (0x01<<11), P_PAD_PULL_UP_REG2);
+		uart_puts("boot_11 saved state\n");
 	}
 
 	/* Power Key: BOOT[11]*/
@@ -356,10 +356,10 @@ static unsigned int detect_key(unsigned int suspend_from)
 		}
 		if (exit_reason){
 			if (boot_pinmux & (0x01<<13)){
-				uart_puts("boot_11 enable nor_d pinmux\n");
 				writel(boot_pinmux | (0x01<<13), P_PERIPHS_PIN_MUX_7);
 				writel((readl(P_PAD_PULL_UP_EN_REG2) & (~(0x01<<11))) | (boot_pullen & (0x01<<11)), P_PAD_PULL_UP_EN_REG2);
 				writel((readl(P_PAD_PULL_UP_REG2) & (~(0x01<<11))) | (boot_pullup & (0x01<<11)), P_PAD_PULL_UP_REG2);
+				uart_puts("boot_11 restored state\n");
 			}
 			break;
 		} else
