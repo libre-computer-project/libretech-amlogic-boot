@@ -150,6 +150,10 @@ static void power_on_at_32k(void)
 {
 }
 
+unsigned long boot_pinmux;
+unsigned long boot_pullen;
+unsigned long boot_pullup;
+
 void get_wakeup_source(void *response, unsigned int suspend_from)
 {
 	struct wakeup_info *p = (struct wakeup_info *)response;
@@ -177,8 +181,15 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	p->sources = val;
 
-	uart_puts("boot_11 disable nor_d pinmux\n");
-	writel(readl(P_PERIPHS_PIN_MUX_7) & (~(0x01<<13)), P_PERIPHS_PIN_MUX_7);
+	boot_pinmux = readl(P_PERIPHS_PIN_MUX_7);
+	if (boot_pinmux & (0x01<<13)){
+		uart_puts("boot_11 save state pull up\n");
+		writel(boot_pinmux & (~(0x01<<13)), P_PERIPHS_PIN_MUX_7);
+		boot_pullen = readl(P_PAD_PULL_UP_EN_REG2);
+		writel(boot_pullen | (0x01<<11), P_PAD_PULL_UP_EN_REG2);
+		boot_pullup = readl(P_PAD_PULL_UP_REG2);
+		writel(boot_pullup | (0x01<<11), P_PAD_PULL_UP_REG2);
+	}
 
 	/* Power Key: BOOT[11]*/
 	gpio = &(p->gpio_info[i]);
@@ -252,6 +263,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 	remote_cec_hw_reset();
 #ifdef CONFIG_CEC_WAKEUP
 	if (hdmi_cec_func_config & 0x1) {
+		remote_cec_hw_reset();
 		cec_node_init();
 	}
 #endif
@@ -329,8 +341,12 @@ static unsigned int detect_key(unsigned int suspend_from)
 				exit_reason = ETH_PHY_WAKEUP;
 		}
 		if (exit_reason){
-			uart_puts("boot_11 enable nor_d pinmux\n");
-			writel(readl(P_PERIPHS_PIN_MUX_7) | (0x01<<13), P_PERIPHS_PIN_MUX_7);
+			if (boot_pinmux & (0x01<<13)){
+				uart_puts("boot_11 enable nor_d pinmux\n");
+				writel(boot_pinmux | (0x01<<13), P_PERIPHS_PIN_MUX_7);
+				writel((readl(P_PAD_PULL_UP_EN_REG2) & (~(0x01<<11))) | (boot_pullen & (0x01<<11)), P_PAD_PULL_UP_EN_REG2);
+				writel((readl(P_PAD_PULL_UP_REG2) & (~(0x01<<11))) | (boot_pullup & (0x01<<11)), P_PAD_PULL_UP_REG2);
+			}
 			break;
 		} else
 			asm volatile("wfi");
