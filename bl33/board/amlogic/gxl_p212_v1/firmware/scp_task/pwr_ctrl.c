@@ -175,7 +175,18 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	p->sources = val;
 
-	/* Power Key: GPIOH_6*/
+	/* Power Key: GPIOAO_1 */
+	gpio = &(p->gpio_info[i]);
+	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+	gpio->gpio_in_idx = GPIOAO_1;
+	gpio->gpio_in_ao = 1;
+	gpio->gpio_out_idx = -1;
+	gpio->gpio_out_ao = -1;
+	gpio->irq = IRQ_AO_GPIO0_NUM;
+	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+	p->gpio_info_count = ++i;
+
+	/* Power Key: GPIOH_6 */
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
 	gpio->gpio_in_idx = GPIOH_6;
@@ -293,12 +304,22 @@ static unsigned int detect_key(unsigned int suspend_from)
 				exit_reason = REMOTE_CUS_WAKEUP;
 		}
 
+		if (irq[IRQ_AO_GPIO0] == IRQ_AO_GPIO0_NUM) {
+			// Test output immediately before printing and resetting interrupt
+			if ((readl(AO_GPIO_I) & (0x01 << 1)) == 0){
+				exit_reason = POWER_KEY_WAKEUP;
+			}
+			uart_puts("irq ao gpio0\n");
+			irq[IRQ_AO_GPIO0] = 0xFFFFFFFF;
+		}
+
 		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
 			uart_puts("irq gpio0\n");
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;
 			if ((readl(PREG_PAD_GPIO1_I) & (0x01 << 26)) == 0)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
+
 #ifdef CONFIG_BT_WAKEUP
 		if (irq[IRQ_GPIO1] == IRQ_GPIO1_NUM) {
 			uart_puts("irq gpio1\n");
