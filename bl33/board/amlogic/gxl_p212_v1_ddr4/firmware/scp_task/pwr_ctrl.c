@@ -189,6 +189,17 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 		uart_puts("boot_11 saved state\n");
 	}
 
+	/* Power Key: GPIOAO_1 */
+	gpio = &(p->gpio_info[i]);
+	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+	gpio->gpio_in_idx = GPIOAO_1;
+	gpio->gpio_in_ao = 1;
+	gpio->gpio_out_idx = -1;
+	gpio->gpio_out_ao = -1;
+	gpio->irq = IRQ_AO_GPIO0_NUM;
+	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+	p->gpio_info_count = ++i;
+
 	/* Power Key: BOOT[11]*/
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
@@ -200,6 +211,17 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
+	/* Power Key: GPIOH_6*/
+	gpio = &(p->gpio_info[i]);
+	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+	gpio->gpio_in_idx = GPIOH_6;
+	gpio->gpio_in_ao = 0;
+	gpio->gpio_out_idx = -1;
+	gpio->gpio_out_ao = -1;
+	gpio->irq = IRQ_GPIO1_NUM;
+	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+	p->gpio_info_count = ++i;
+
 #ifdef CONFIG_BT_WAKEUP
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = BT_WAKEUP_SRC;
@@ -207,7 +229,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->gpio_in_ao = 0;
 	gpio->gpio_out_idx = GPIOX_17;
 	gpio->gpio_out_ao = 0;
-	gpio->irq = IRQ_GPIO1_NUM;
+	gpio->irq = IRQ_GPIO2_NUM;
 	gpio->trig_type	= GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 #endif
@@ -218,20 +240,10 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->gpio_in_ao = 0;
 	gpio->gpio_out_idx = GPIOX_6;
 	gpio->gpio_out_ao = 0;
-	gpio->irq = IRQ_GPIO2_NUM;
+	gpio->irq = IRQ_GPIO3_NUM;
 	gpio->trig_type	= GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 #endif
-	/* Power Key: GPIOH_6*/
-	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
-	gpio->gpio_in_idx = GPIOH_6;
-	gpio->gpio_in_ao = 0;
-	gpio->gpio_out_idx = -1;
-	gpio->gpio_out_ao = -1;
-	gpio->irq = IRQ_GPIO3_NUM;
-	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
-	p->gpio_info_count = ++i;
 }
 void wakeup_timer_setup(void)
 {
@@ -317,16 +329,33 @@ static unsigned int detect_key(unsigned int suspend_from)
 				exit_reason = REMOTE_CUS_WAKEUP;
 		}
 
+		if (irq[IRQ_AO_GPIO0] == IRQ_AO_GPIO0_NUM) {
+			// Test output immediately before printing and resetting interrupt
+			if ((readl(AO_GPIO_I) & (0x01 << 1)) == 0){
+				exit_reason = POWER_KEY_WAKEUP;
+			}
+			uart_puts("irq ao gpio0\n");
+			irq[IRQ_AO_GPIO0] = 0xFFFFFFFF;
+		}
+
 		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
 			uart_puts("irq gpio0\n");
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;
 			if ((readl(PREG_PAD_GPIO2_I) & (0x01 << 11)) == 0)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
-#ifdef CONFIG_BT_WAKEUP
+
 		if (irq[IRQ_GPIO1] == IRQ_GPIO1_NUM) {
 			uart_puts("irq gpio1\n");
 			irq[IRQ_GPIO1] = 0xFFFFFFFF;
+			if ((readl(PREG_PAD_GPIO1_I) & (0x01 << 26)) == 0)
+				exit_reason = POWER_KEY_WAKEUP;
+		}
+
+#ifdef CONFIG_BT_WAKEUP
+		if (irq[IRQ_GPIO2] == IRQ_GPIO2_NUM) {
+			uart_puts("irq gpio2\n");
+			irq[IRQ_GPIO2] = 0xFFFFFFFF;
 			if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 18))
 				&& (readl(PREG_PAD_GPIO4_O) & (0x01 << 17))
 				&& !(readl(PREG_PAD_GPIO4_EN_N) & (0x01 << 17)))
@@ -334,26 +363,21 @@ static unsigned int detect_key(unsigned int suspend_from)
 		}
 #endif
 #ifdef CONFIG_WIFI_WAKEUP
-		if (irq[IRQ_GPIO2] == IRQ_GPIO2_NUM) {
-			uart_puts("irq gpio2\n");
-			irq[IRQ_GPIO2] = 0xFFFFFFFF;
+		if (irq[IRQ_GPIO3] == IRQ_GPIO3_NUM) {
+			uart_puts("irq gpio3\n");
+			irq[IRQ_GPIO3] = 0xFFFFFFFF;
 			if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 7))
 				&& (readl(PREG_PAD_GPIO4_O) & (0x01 << 6))
 				&& !(readl(PREG_PAD_GPIO4_EN_N) & (0x01 << 6)))
 				exit_reason = WIFI_WAKEUP;
 		}
 #endif
-		if (irq[IRQ_GPIO3] == IRQ_GPIO3_NUM) {
-			uart_puts("irq gpio3\n");
-			irq[IRQ_GPIO3] = 0xFFFFFFFF;
-			if ((readl(PREG_PAD_GPIO1_I) & (0x01 << 26)) == 0)
-				exit_reason = POWER_KEY_WAKEUP;
-		}
 		if (irq[IRQ_ETH_PHY] == IRQ_ETH_PHY_NUM) {
 			uart_puts("irq eth\n");
 			irq[IRQ_ETH_PHY] = 0xFFFFFFFF;
 				exit_reason = ETH_PHY_WAKEUP;
 		}
+
 		if (exit_reason){
 			if (boot_pinmux & (0x01<<13)){
 				writel(boot_pinmux | (0x01<<13), P_PERIPHS_PIN_MUX_7);

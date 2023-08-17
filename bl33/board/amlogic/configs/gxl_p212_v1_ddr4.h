@@ -44,8 +44,8 @@
 /* configs for CEC */
 #define CONFIG_CEC_OSD_NAME		"AML-S905X-CC-V2"
 #define CONFIG_CEC_WAKEUP
-#define CONFIG_BT_WAKEUP
-#define CONFIG_WIFI_WAKEUP
+//#define CONFIG_BT_WAKEUP
+//#define CONFIG_WIFI_WAKEUP
 #define CONFIG_INSTABOOT
 /* configs for dtb in boot.img */
 //#define DTB_BIND_KERNEL
