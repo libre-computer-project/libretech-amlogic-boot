@@ -191,6 +191,17 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 		uart_puts("boot_11 saved state\n");
 	}
 
+	/* Power Key: GPIOAO_1 */
+	gpio = &(p->gpio_info[i]);
+	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+	gpio->gpio_in_idx = GPIOAO_1;
+	gpio->gpio_in_ao = 1;
+	gpio->gpio_out_idx = -1;
+	gpio->gpio_out_ao = -1;
+	gpio->irq = IRQ_AO_GPIO0_NUM;
+	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+	p->gpio_info_count = ++i;
+
 	/* Power Key: BOOT[11]*/
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
@@ -309,6 +320,15 @@ static unsigned int detect_key(unsigned int suspend_from)
 				exit_reason = REMOTE_CUS_WAKEUP;
 		}
 
+		if (irq[IRQ_AO_GPIO0] == IRQ_AO_GPIO0_NUM) {
+			// Test output immediately before printing and resetting interrupt
+			if ((readl(AO_GPIO_I) & (0x01 << 1)) == 0){
+				exit_reason = POWER_KEY_WAKEUP;
+			}
+			uart_puts("irq ao gpio0\n");
+			irq[IRQ_AO_GPIO0] = 0xFFFFFFFF;
+		}
+
 		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
 			uart_puts("irq gpio0\n");
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;
@@ -340,6 +360,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 			irq[IRQ_ETH_PHY] = 0xFFFFFFFF;
 				exit_reason = ETH_PHY_WAKEUP;
 		}
+
 		if (exit_reason){
 			if (boot_pinmux & (0x01<<13)){
 				writel(boot_pinmux | (0x01<<13), P_PERIPHS_PIN_MUX_7);
