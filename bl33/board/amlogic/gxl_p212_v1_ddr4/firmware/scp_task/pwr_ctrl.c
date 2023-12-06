@@ -211,17 +211,6 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
-	/* Power Key: GPIOH_6*/
-	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
-	gpio->gpio_in_idx = GPIOH_6;
-	gpio->gpio_in_ao = 0;
-	gpio->gpio_out_idx = -1;
-	gpio->gpio_out_ao = -1;
-	gpio->irq = IRQ_GPIO1_NUM;
-	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
-	p->gpio_info_count = ++i;
-
 #ifdef CONFIG_BT_WAKEUP
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = BT_WAKEUP_SRC;
@@ -342,13 +331,6 @@ static unsigned int detect_key(unsigned int suspend_from)
 			uart_puts("irq gpio0\n");
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;
 			if ((readl(PREG_PAD_GPIO2_I) & (0x01 << 11)) == 0)
-				exit_reason = POWER_KEY_WAKEUP;
-		}
-
-		if (irq[IRQ_GPIO1] == IRQ_GPIO1_NUM) {
-			uart_puts("irq gpio1\n");
-			irq[IRQ_GPIO1] = 0xFFFFFFFF;
-			if ((readl(PREG_PAD_GPIO1_I) & (0x01 << 26)) == 0)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
 
