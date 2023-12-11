@@ -38,13 +38,11 @@ static void set_vddee_voltage(unsigned int target_voltage)
 	writel((readl(PREG_PAD_GPIO0_EN_N) | 0x200), PREG_PAD_GPIO0_EN_N);
 	if (((readl(PREG_PAD_GPIO0_EN_N) & 0x200 ) == 0x200) &&
 			((readl(PREG_PAD_GPIO0_I) & 0x200 ) == 0x0)) {
-		uart_puts("use vddee new table!");
-		uart_puts("\n");
+		uart_puts("use vddee new table!\n");
 		pwm_voltage_ee = pwm_voltage_table_ee_new;
 		pwm_size = ARRAY_SIZE(pwm_voltage_table_ee_new);
 	} else {
-		uart_puts("use vddee table!");
-		uart_puts("\n");
+		uart_puts("use vddee table!\n");
 		pwm_voltage_ee = pwm_voltage_table_ee;
 		pwm_size = ARRAY_SIZE(pwm_voltage_table_ee);
 	}
@@ -74,12 +72,13 @@ static void power_off_at_24M(unsigned int suspend_from)
 	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
 
 	if (suspend_from == SYS_POWEROFF){
+		uart_puts("poweroff\n");
 		/*set test_n low to power off vcck_b & vcc 3.3v*/
 		writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
-
-		writel((readl(PREG_PAD_GPIO2_EN_N) ^ 0x4), PREG_PAD_GPIO2_EN_N);
+	} else {
+		uart_puts("suspend\n");
 	}
 
 	/*step down ee voltage*/
@@ -92,12 +91,14 @@ static void power_on_at_24M(unsigned int suspend_from)
 	set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE);
 
 	if (suspend_from == SYS_POWEROFF){
+		uart_puts("poweron\n");
 		/*set test_n high to power on vcck_b & vcc 3.3v*/
 		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
 		
-		writel((readl(PREG_PAD_GPIO2_EN_N) | 0x4), PREG_PAD_GPIO2_EN_N);
+	} else {
+		uart_puts("resume\n");
 	}
 	_udelay(100);
 	
