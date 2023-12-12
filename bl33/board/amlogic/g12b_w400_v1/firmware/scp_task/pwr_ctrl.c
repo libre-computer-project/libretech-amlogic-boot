@@ -81,6 +81,9 @@ static void power_off_at_24M(unsigned int suspend_from)
 		uart_puts("suspend\n");
 	}
 
+	writel(readl(PREG_PAD_GPIO2_O) | (1 << 4), PREG_PAD_GPIO2_O);
+	writel(readl(PREG_PAD_GPIO2_EN_N) & (~(1 << 4)), PREG_PAD_GPIO2_EN_N);
+
 	/*step down ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_SLEEP_VOLTAGE);
 }
@@ -90,8 +93,12 @@ static void power_on_at_24M(unsigned int suspend_from)
 	/*step up ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE);
 
+	writel(readl(PREG_PAD_GPIO2_O) | (1 << 4), PREG_PAD_GPIO2_O);
+	writel(readl(PREG_PAD_GPIO2_EN_N) & (~(1 << 4)), PREG_PAD_GPIO2_EN_N);
+
 	if (suspend_from == SYS_POWEROFF){
 		uart_puts("poweron\n");
+
 		/*set test_n high to power on vcck_b & vcc 3.3v*/
 		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
