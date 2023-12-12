@@ -28,6 +28,8 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
+#define SUSPEND_CPU 0
+
 static void set_vddee_voltage(unsigned int target_voltage)
 {
 	unsigned int to, pwm_size = 0;
@@ -73,10 +75,12 @@ static void power_off_at_24M(unsigned int suspend_from)
 
 	if (suspend_from == SYS_POWEROFF){
 		uart_puts("poweroff\n");
+#if SUSPEND_CPU
 		/*set test_n low to power off vcck_b & vcc 3.3v*/
 		writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
+#endif
 	} else {
 		uart_puts("suspend\n");
 	}
@@ -98,12 +102,12 @@ static void power_on_at_24M(unsigned int suspend_from)
 
 	if (suspend_from == SYS_POWEROFF){
 		uart_puts("poweron\n");
-
+#if SUSPEND_CPU
 		/*set test_n high to power on vcck_b & vcc 3.3v*/
 		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
-		
+#endif		
 	} else {
 		uart_puts("resume\n");
 	}
@@ -132,8 +136,10 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	p->status = RESPONSE_OK;
 	
 	val = (POWER_KEY_WAKEUP_SRC | AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC | CECB_WAKEUP_SRC);
-	if (suspend_from != SYS_POWEROFF) val |= ETH_PHY_GPIO_SRC;
-
+#if SUSPEND_CPU
+	if (suspend_from != SYS_POWEROFF)
+#endif
+		val |= ETH_PHY_GPIO_SRC;
 	p->sources = val;
 
 	/* Power Key: AO_GPIO[1]*/
@@ -147,7 +153,9 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
+#if SUSPEND_CPU
 	if (suspend_from != SYS_POWEROFF){
+#endif
 		/*Eth:GPIOZ_14*/
 		gpio = &(p->gpio_info[i]);
 		gpio->wakeup_id = ETH_PHY_GPIO_SRC;
@@ -169,7 +177,9 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 		gpio->irq = IRQ_GPIO0_NUM;
 		gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 		p->gpio_info_count = ++i;
+#if SUSPEND_CPU
 	}
+#endif
 }
 extern void __switch_idle_task(void);
 
@@ -210,7 +220,9 @@ static unsigned int detect_key(unsigned int suspend_from)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
 
+#if SUSPEND_CPU
 		if (suspend_from != SYS_POWEROFF){
+#endif
 			if (irq[IRQ_GPIO1] == IRQ_GPIO1_NUM) {
 				irq[IRQ_GPIO1] = 0xFFFFFFFF;
 				if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 14))
@@ -223,8 +235,9 @@ static unsigned int detect_key(unsigned int suspend_from)
 				if ((readl(PREG_PAD_GPIO0_I) & (1<<5)) == 0)
 					exit_reason = POWER_KEY_WAKEUP;
 			}
+#if SUSPEND_CPU
 		}
-
+#endif
 		if (irq[IRQ_ETH_PTM] == IRQ_ETH_PMT_NUM) {
 			irq[IRQ_ETH_PTM]= 0xFFFFFFFF;
 			exit_reason = ETH_PMT_WAKEUP;
