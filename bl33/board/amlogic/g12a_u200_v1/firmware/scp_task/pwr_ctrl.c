@@ -21,11 +21,14 @@
 
 #include <gpio.h>
 #include "pwm_ctrl.h"
+#include <suspend.h>
 #ifdef CONFIG_CEC_WAKEUP
 #include <cec_tx_reg.h>
 #endif
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
+#define SUSPEND_CPU 0
 
 static void set_vddee_voltage(unsigned int target_voltage)
 {
@@ -37,13 +40,11 @@ static void set_vddee_voltage(unsigned int target_voltage)
 	writel((readl(PREG_PAD_GPIO0_EN_N) | 0x200), PREG_PAD_GPIO0_EN_N);
 	if (((readl(PREG_PAD_GPIO0_EN_N) & 0x200 ) == 0x200) &&
 			((readl(PREG_PAD_GPIO0_I) & 0x200 ) == 0x0)) {
-		uart_puts("use vddee new table!");
-		uart_puts("\n");
+		uart_puts("use vddee new table!\n");
 		pwm_voltage_ee = pwm_voltage_table_ee_new;
 		pwm_size = ARRAY_SIZE(pwm_voltage_table_ee_new);
 	} else {
-		uart_puts("use vddee table!");
-		uart_puts("\n");
+		uart_puts("use vddee table!\n");
 		pwm_voltage_ee = pwm_voltage_table_ee;
 		pwm_size = ARRAY_SIZE(pwm_voltage_table_ee);
 	}
@@ -66,12 +67,23 @@ static void power_off_at_24M(unsigned int suspend_from)
 	/*set gpioH_8 low to power off vcc 5v*/
 	writel(readl(PREG_PAD_GPIO3_EN_N) & (~(1 << 8)), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
-#if 0
-	/*set test_n low to power off vcck & vcc 3.3v*/
-	writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
-	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
-	writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
+
+
+	if (suspend_from == SYS_POWEROFF){
+		uart_puts("poweroff\n");
+#if SUSPEND_CPU
+		/*set test_n low to power off vcck_b & vcc 3.3v*/
+		writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
 #endif
+	} else {
+		uart_puts("suspend\n");
+	}
+
+	writel(readl(PREG_PAD_GPIO2_O) | (1 << 4), PREG_PAD_GPIO2_O);
+	writel(readl(PREG_PAD_GPIO2_EN_N) & (~(1 << 4)), PREG_PAD_GPIO2_EN_N);
+
 	/*step down ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_SLEEP_VOLTAGE);
 }
@@ -80,13 +92,23 @@ static void power_on_at_24M(unsigned int suspend_from)
 {
 	/*step up ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE);
-#if 0
-	/*set test_n low to power on vcck & vcc 3.3v*/
-	writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
-	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
-	writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
+
+	writel(readl(PREG_PAD_GPIO2_O) | (1 << 4), PREG_PAD_GPIO2_O);
+	writel(readl(PREG_PAD_GPIO2_EN_N) & (~(1 << 4)), PREG_PAD_GPIO2_EN_N);
+
+	if (suspend_from == SYS_POWEROFF){
+		uart_puts("poweron\n");
+#if SUSPEND_CPU
+		/*set test_n high to power on vcck_b & vcc 3.3v*/
+		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
+#endif	
+	} else {
+		uart_puts("resume\n");
+	}
 	_udelay(100);
-#endif
+
 	/*set gpioH_8 low to power on vcc 5v*/
 	writel(readl(PREG_PAD_GPIO3_EN_N) | (1 << 8), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
@@ -101,9 +123,12 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	unsigned i = 0;
 
 	p->status = RESPONSE_OK;
-	val = (POWER_KEY_WAKEUP_SRC | AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC |
-	       ETH_PHY_GPIO_SRC | CECB_WAKEUP_SRC);
 
+	val = (POWER_KEY_WAKEUP_SRC | AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC | CECB_WAKEUP_SRC);
+#if SUSPEND_CPU
+	if (suspend_from != SYS_POWEROFF)
+#endif
+		val |= ETH_PHY_GPIO_SRC;
 	p->sources = val;
 
 	/* Power Key: AO_GPIO[1]*/
@@ -116,28 +141,34 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->irq = IRQ_AO_GPIO0_NUM;
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
-//#if 0
-	/*Eth:GPIOZ_14*/
-	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = ETH_PHY_GPIO_SRC;
-	gpio->gpio_in_idx = GPIOZ_14;
-	gpio->gpio_in_ao = 0;
-	gpio->gpio_out_idx = -1;
-	gpio->gpio_out_ao = -1;
-	gpio->irq = IRQ_GPIO1_NUM;
-	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
-	p->gpio_info_count = ++i;
-//#endif
-	/* BOOT_5 */
-	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
-	gpio->gpio_in_idx = BOOT_5;
-	gpio->gpio_in_ao = 0;
-	gpio->gpio_out_idx = -1;
-	gpio->gpio_out_ao = -1;
-	gpio->irq = IRQ_GPIO0_NUM;
-	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
-	p->gpio_info_count = ++i;
+
+#if SUSPEND_CPU
+	if (suspend_from != SYS_POWEROFF){
+#endif
+		/*Eth:GPIOZ_14*/
+		gpio = &(p->gpio_info[i]);
+		gpio->wakeup_id = ETH_PHY_GPIO_SRC;
+		gpio->gpio_in_idx = GPIOZ_14;
+		gpio->gpio_in_ao = 0;
+		gpio->gpio_out_idx = -1;
+		gpio->gpio_out_ao = -1;
+		gpio->irq = IRQ_GPIO1_NUM;
+		gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+		p->gpio_info_count = ++i;
+
+		/* BOOT_5 */
+		gpio = &(p->gpio_info[i]);
+		gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+		gpio->gpio_in_idx = BOOT_5;
+		gpio->gpio_in_ao = 0;
+		gpio->gpio_out_idx = -1;
+		gpio->gpio_out_ao = -1;
+		gpio->irq = IRQ_GPIO0_NUM;
+		gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+		p->gpio_info_count = ++i;
+#if SUSPEND_CPU
+	}
+#endif
 }
 extern void __switch_idle_task(void);
 
@@ -177,20 +208,25 @@ static unsigned int detect_key(unsigned int suspend_from)
 			if ((readl(AO_GPIO_I) & (1<<1)) == 0)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
-//#if 0
-		if (irq[IRQ_GPIO1] == IRQ_GPIO1_NUM) {
-			irq[IRQ_GPIO1] = 0xFFFFFFFF;
-			if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 14))
-					&& (readl(PREG_PAD_GPIO4_EN_N) & (0x01 << 14)))
-				exit_reason = ETH_PHY_GPIO;
-		}
-//#endif
-		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
-			irq[IRQ_GPIO0] = 0xFFFFFFFF;
-			if ((readl(PREG_PAD_GPIO0_I) & (1<<5)) == 0)
-				exit_reason = POWER_KEY_WAKEUP;
-		}
 
+#if SUSPEND_CPU
+		if (suspend_from != SYS_POWEROFF){
+#endif
+			if (irq[IRQ_GPIO1] == IRQ_GPIO1_NUM) {
+				irq[IRQ_GPIO1] = 0xFFFFFFFF;
+				if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 14))
+						&& (readl(PREG_PAD_GPIO4_EN_N) & (0x01 << 14)))
+					exit_reason = ETH_PHY_GPIO;
+			}
+
+			if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
+				irq[IRQ_GPIO0] = 0xFFFFFFFF;
+				if ((readl(PREG_PAD_GPIO0_I) & (1<<5)) == 0)
+					exit_reason = POWER_KEY_WAKEUP;
+			}
+#if SUSPEND_CPU
+		}
+#endif
 		if (irq[IRQ_ETH_PTM] == IRQ_ETH_PMT_NUM) {
 			irq[IRQ_ETH_PTM]= 0xFFFFFFFF;
 			exit_reason = ETH_PMT_WAKEUP;

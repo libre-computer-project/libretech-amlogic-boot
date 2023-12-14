@@ -112,7 +112,7 @@ static void power_on_at_24M(unsigned int suspend_from)
 		uart_puts("resume\n");
 	}
 	_udelay(100);
-	
+
 	/*set gpioao_4 high to power on vcck_a*/
 	writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
@@ -123,7 +123,6 @@ static void power_on_at_24M(unsigned int suspend_from)
 	writel(readl(PREG_PAD_GPIO3_EN_N) | (1 << 8), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
 	_udelay(10000);
-
 }
 
 void get_wakeup_source(void *response, unsigned int suspend_from)
