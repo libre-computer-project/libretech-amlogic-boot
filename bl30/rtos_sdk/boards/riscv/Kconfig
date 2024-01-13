@@ -1,0 +1,10 @@
+# Copyright (c) 2021-2022 Amlogic, Inc. All rights reserved.
+
+# SPDX-License-Identifier: MIT
+
+config BL30_VERSION_SAVE
+	bool "BL30 VERSION SAVE"
+	help
+	  Enable BL30 VERSION SAVE.
+
+rsource "${BOARD}/Kconfig"

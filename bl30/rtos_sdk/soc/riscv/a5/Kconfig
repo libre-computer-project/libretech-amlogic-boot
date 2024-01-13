@@ -1,0 +1,9 @@
+# Copyright (c) 2021-2022 Amlogic, Inc. All rights reserved.
+
+# SPDX-License-Identifier: MIT
+
+config SOC_A5
+	bool "A5"
+	select RISCV
+	help
+	  Enable A5 SOC of RISCV.
