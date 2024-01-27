@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOOLCHAIN_PATH="/opt"
+TOOLCHAIN_PATH=${2:-/opt}
 
 usage()
 {

@@ -2,7 +2,7 @@
 
 set -xe
 
-TOOLCHAIN_PATH="/opt"
+TOOLCHAIN_PATH=${1:-/opt}
 
 GCC_ARM_NONE_EABI_URL="https://releases.linaro.org/archive/13.11/components/toolchain/binaries/gcc-linaro-arm-none-eabi-4.8-2013.11_linux.tar.xz"
 GCC_ARM_NONE_EABI_PATH="gcc-linaro-arm-none-eabi-4.8-2013.11_linux"
