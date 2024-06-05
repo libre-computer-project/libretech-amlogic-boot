@@ -52,6 +52,7 @@ static void set_vddee_voltage(unsigned int target_voltage)
 
 static void power_off_at_24M(unsigned int suspend_from)
 {
+#ifdef DMC_CHANS_STS_BUG
 	/*set gpioH_8 low to power off vcc 5v*/
 	writel(readl(PREG_PAD_GPIO3_EN_N) & (~(1 << 8)), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
@@ -60,7 +61,7 @@ static void power_off_at_24M(unsigned int suspend_from)
 	writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
 	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
-
+#endif
 	if (suspend_from == SYS_POWEROFF) {
 		uart_puts("poweroff\n");
 #if SUSPEND_CPU
@@ -73,8 +74,10 @@ static void power_off_at_24M(unsigned int suspend_from)
 		uart_puts("suspend\n");
 	}
 
+#ifdef DMC_CHANS_STS_BUG
 	writel(readl(PREG_PAD_GPIO2_O) | (1 << 4), PREG_PAD_GPIO2_O);
 	writel(readl(PREG_PAD_GPIO2_EN_N) & (~(1 << 4)), PREG_PAD_GPIO2_EN_N);
+#endif
 
 	/*step down ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_SLEEP_VOLTAGE);
@@ -85,8 +88,11 @@ static void power_on_at_24M(unsigned int suspend_from)
 	/*step up ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE);
 
+#ifdef DMC_CHANS_STS_BUG
+	/* ?? */
 	writel(readl(PREG_PAD_GPIO2_O) | (1 << 4), PREG_PAD_GPIO2_O);
 	writel(readl(PREG_PAD_GPIO2_EN_N) & (~(1 << 4)), PREG_PAD_GPIO2_EN_N);
+#endif
 
 	if (suspend_from == SYS_POWEROFF) {
 		uart_puts("poweron\n");
@@ -101,6 +107,7 @@ static void power_on_at_24M(unsigned int suspend_from)
 	}
 	_udelay(100);
 
+#ifdef DMC_CHANS_STS_BUG
 	/*set gpioao_4 high to power on vcck_a*/
 	writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
@@ -111,7 +118,7 @@ static void power_on_at_24M(unsigned int suspend_from)
 	writel(readl(PREG_PAD_GPIO3_EN_N) | (1 << 8), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
 	_udelay(10000);
-
+#endif
 }
 
 void get_wakeup_source(void *response, unsigned int suspend_from)
