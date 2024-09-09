@@ -68,6 +68,8 @@ static void set_vddee_voltage(unsigned int target_voltage)
 
 static void power_off_at_24M(unsigned int suspend_from)
 {
+	uart_puts("pwr off\n");
+	
 	/* VDDCPU_A_EN GPIOAO_10 */
 	writel(readl(AO_GPIO_O) & (~(1 << 10)), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 10)), AO_GPIO_O_EN_N);
@@ -106,6 +108,8 @@ static void power_off_at_24M(unsigned int suspend_from)
 
 static void power_on_at_24M(unsigned int suspend_from)
 {
+	uart_puts("pwr on\n");
+
 	/*step up ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE);
 	
