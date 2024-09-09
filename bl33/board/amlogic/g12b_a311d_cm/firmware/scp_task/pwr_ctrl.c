@@ -28,8 +28,14 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
-#define SUSPEND_CPU 0
+#define SUSPEND_EE 1
+#define SUSPEND_CPU_B 1
 
+#if SUSPEND_EE
+#define SUSPEND_CPU 1
+#else
+#define SUSPEND_CPU SUSPEND_CPU_B
+#endif
 static void set_vddee_voltage(unsigned int target_voltage)
 {
 	unsigned int to, pwm_size = 0;
@@ -71,49 +77,49 @@ static void power_off_at_24M(unsigned int suspend_from)
 	uart_puts("pwr off\n");
 	
 	/* VDDCPU_A_EN GPIOAO_10 */
+	uart_puts("cpu_a ");
 	writel(readl(AO_GPIO_O) & (~(1 << 10)), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 10)), AO_GPIO_O_EN_N);
 	writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 8)), AO_RTI_PIN_MUX_REG1);
-	uart_puts("cpu_a off\n");
+	uart_puts("off\n");
 
 #if SUSPEND_CPU
 	/* VDDCPU_B_EN GPIOAO_4 */
+	uart_puts("cpu_b ");
 	writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
 	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
-	uart_puts("cpu_b off\n");
+	uart_puts("off\n");
 #endif
 
 	if (suspend_from == SYS_POWEROFF){
 		/* SD CARD VOLTAGE */
 		/*
+		uart_puts("sd ");
 		writel(readl(PREG_PAD_GPIO2_O) | (1 << 4), PREG_PAD_GPIO2_O); # UPDATE
 		writel(readl(PREG_PAD_GPIO2_EN_N) & (~(1 << 4)), PREG_PAD_GPIO2_EN_N);
-		uart_puts("sd off\n");
+		uart_puts("off\n");
 		*/
-	
+#if SUSPEND_EE
 		/* VDDEE_EN GPIOAO_T */
+		uart_puts("ee ");
 		writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
-		
-		uart_puts("ee off\n");
+		uart_puts("off\n");
+#endif
 	} else {
-		uart_puts("ee nop\n");
+		/*step down ee voltage*/
+		uart_puts("ee ");
+		set_vddee_voltage(CONFIG_VDDEE_SLEEP_VOLTAGE);
+		uart_puts("lp\n");
 	}
 
-	/*step down ee voltage*/
-	set_vddee_voltage(CONFIG_VDDEE_SLEEP_VOLTAGE);
 }
 
 static void power_on_at_24M(unsigned int suspend_from)
 {
 	uart_puts("pwr on\n");
-
-	/*step up ee voltage*/
-	set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE);
-	
-	_udelay(100);
 
 	if (suspend_from == SYS_POWEROFF){
 		/* SD CARD VOLTAGE */
@@ -123,31 +129,42 @@ static void power_on_at_24M(unsigned int suspend_from)
 		uart_puts("sd on\n");
 		*/
 
+#if SUSPEND_EE
 		/* VDDEE_EN GPIOAO_T */
+		uart_puts("ee ");
 		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
-		uart_puts("ee on\n");
+		uart_puts("on\n");
 		
 		_udelay(10000);
+#endif
+
 	} else {
-		uart_puts("ee nop\n");
+		/*step up ee voltage*/
+		uart_puts("ee ");
+		set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE);
+		uart_puts("init\n");
+
+		_udelay(100);
 	}
 
 #if SUSPEND_CPU
 	/* VDDCPU_B_EN GPIOAO_4 */
+	uart_puts("cpu_b ");
 	writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
 	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
-	uart_puts("cpu_b on\n");
+	uart_puts("on\n");
 
 	_udelay(100);
 #endif
 	/* VDDCPU_A_EN GPIOAO_10 */
+	uart_puts("cpu_a ");
 	writel(readl(AO_GPIO_O) | (1 << 10), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 10)), AO_GPIO_O_EN_N);
 	writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 8)), AO_RTI_PIN_MUX_REG1);
-	uart_puts("cpu_a on\n");
+	uart_puts("on\n");
 	
 	_udelay(100);
 }
