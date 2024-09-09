@@ -52,7 +52,7 @@ static void set_vddee_voltage(unsigned int target_voltage)
 		pwm_size = ARRAY_SIZE(pwm_voltage_table_ee_new);
 	} else {
 	*/
-		uart_puts("use vddee table!\n");
+	//	uart_puts("use vddee table!\n");
 		pwm_voltage_ee = pwm_voltage_table_ee;
 		pwm_size = ARRAY_SIZE(pwm_voltage_table_ee);
 	/*
@@ -75,7 +75,7 @@ static void set_vddee_voltage(unsigned int target_voltage)
 static void power_off_at_24M(unsigned int suspend_from)
 {
 	uart_puts("pwr off start\n");
-	
+
 	/* VDDCPU_A_EN GPIOAO_10 */
 	uart_puts("cpu_a ");
 	writel(readl(AO_GPIO_O) & (~(1 << 10)), AO_GPIO_O);
@@ -118,7 +118,6 @@ static void power_off_at_24M(unsigned int suspend_from)
 		
 		uart_puts("pwr suspend\n");
 	}
-	
 }
 
 static void power_on_at_24M(unsigned int suspend_from)
