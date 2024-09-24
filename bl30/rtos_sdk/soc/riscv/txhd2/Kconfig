@@ -1,0 +1,10 @@
+# Copyright (c) 2021-2022 Amlogic, Inc. All rights reserved.
+
+# SPDX-License-Identifier: MIT
+
+config SOC_TXHD2
+	bool "TXHD2"
+	select RISCV
+	select SOC_OLD_ARCH
+	help
+	  Enable TXHD2 SOC of RISCV.

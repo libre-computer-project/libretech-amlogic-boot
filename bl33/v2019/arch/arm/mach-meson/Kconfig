@@ -1,0 +1,197 @@
+if ARCH_MESON
+
+config MESON64_COMMON
+	bool
+	select ARM64
+	select CLK
+	select DM
+	select DM_SERIAL
+	select SYSCON
+	select REGMAP
+	select BOARD_LATE_INIT
+	imply CMD_DM
+
+config MESON_GX
+	bool
+	select MESON64_COMMON
+
+choice
+	prompt "Platform select"
+	default MESON_GXBB
+
+config MESON_GXBB
+	bool "GXBB"
+	select MESON_GX
+	help
+	  Select this if your SoC is an S905
+
+config MESON_GXL
+	bool "GXL"
+	select MESON_GX
+	help
+	  Select this if your SoC is an S905X/D or S805X
+
+config MESON_GXM
+	bool "GXM"
+	select MESON_GX
+	help
+	  Select this if your SoC is an S912
+
+config MESON_AXG
+	bool "AXG"
+	select MESON64_COMMON
+	help
+		Select this if your SoC is an A113X/D
+
+config MESON_A1
+	bool "A1"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson A1 (A1 etc..)
+
+config MESON_C1
+	bool "C1"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson C1
+
+config MESON_S4
+	bool "S4"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson S4
+
+config MESON_A5
+	bool "A5"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson A5
+
+
+config MESON_SC2
+	bool "SC2"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson SC2
+
+config MESON_P1
+	bool "P1"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson P1
+
+config MESON_S5
+	bool "S5"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson S5
+
+config MESON_T7
+	bool "T7"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson T7
+
+config MESON_T3
+	bool "T3"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson T3
+
+config MESON_T3X
+	bool "T3X"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson T3X
+
+config MESON_C2
+	bool "C2"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson C2
+
+config MESON_C3
+	bool "C3"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson C3
+
+config MESON_T5W
+	bool "T5W"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson T5W
+
+config MESON_T5M
+	bool "T5M"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson T5M
+
+config MESON_G12A
+	bool "G12A"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson G12A (S905D2/S905X2/S905Y2 etc..)
+
+config MESON_G12B
+	bool "Support Amlogic Meson G12B Series SoC"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson G12B (A311D etc..)
+
+config MESON_A4
+	bool "A4"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson A4
+
+config MESON_TXHD2
+	bool "TXHD2"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	help
+		Support Amlogic Meson TXHD2
+endchoice
+
+config SYS_MALLOC_F_LEN
+	default 0x1000
+
+source "board/amlogic/Kconfig"
+
+endif

@@ -1,0 +1,33 @@
+if TARGET_T3X_BC303
+
+config SYS_SOC
+	default "t3x"
+
+config SYS_BOARD
+	default "t3x_bc303"
+
+config SYS_VENDOR
+	default "amlogic"
+
+config ENV_DISPLAY_PIPELINE
+	string
+	option env="BOARD_DISPLAY_PIPELINE"
+
+config DISPLAY_PIPELINE
+	string
+	default "multidisplay" if ENV_DISPLAY_PIPELINE="multidisplay"
+
+config SYS_CONFIG_NAME
+	default "t3x_bc303" if ENV_DISPLAY_PIPELINE!="multidisplay"
+	default "t3x_bc303_multidisplay" if ENV_DISPLAY_PIPELINE="multidisplay"
+
+config DTB_BIND_KERNEL
+    bool "load dtb from boot part but not flash rsv"
+    default n
+
+config AML_REBOOT
+       bool "reboot cmd"
+       default y
+       help
+         support uboot reboot cmd
+endif
