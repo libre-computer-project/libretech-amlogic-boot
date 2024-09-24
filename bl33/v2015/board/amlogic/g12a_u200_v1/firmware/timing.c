@@ -558,6 +558,9 @@ ddr_reg_t __ddr_reg[] = {
 
 /* for PWM use */
 /* PWM driver check http://scgit.amlogic.com:8080/#/c/38093/ */
+#define GPIO_O_EN_N_REG2	((0xff634400 + (0x16 << 2)))
+#define GPIO_O_REG2		((0xff634400 + (0x17 << 2)))
+#define GPIO_I_REG2		((0xff634400 + (0x18 << 2)))
 #define GPIO_O_EN_N_REG3	((0xff634400 + (0x19 << 2)))
 #define GPIO_O_REG3		((0xff634400 + (0x1a << 2)))
 #define GPIO_I_REG3		((0xff634400 + (0x1b << 2)))
@@ -603,7 +606,7 @@ bl2_reg_t __bl2_reg[] = {
 	/* Enable VCCK */
 	{AO_SEC_REG0,         (1 << 0),                0xffffffff,   0, BL2_INIT_STAGE_1, 0},
 	{AO_GPIO_O,           (1u << 31),            0xffffffff,   0, BL2_INIT_STAGE_1, 0},
-	/* Init sys led*/
-	{AO_GPIO_O_EN_N,      (0 << 11),               (1 << 11),    0, BL2_INIT_STAGE_1, 0},
-	{AO_GPIO_O,           (1 << 11),               (1 << 11),    0, BL2_INIT_STAGE_1, 0},
+	/* Enable Green LED on GPIOX_3 by PD, Default PU */
+	{GPIO_O_EN_N_REG2,      (0 << 3),               (1 << 3),    0, BL2_INIT_STAGE_1, 0},
+	{GPIO_O_REG2,           (0 << 3),               (1 << 3),    0, BL2_INIT_STAGE_1, 0},
 };
