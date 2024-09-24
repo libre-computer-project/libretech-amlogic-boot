@@ -10,10 +10,6 @@
 #define _AML_CEC_H
 
 
-#ifndef CONFIG_CEC_OSD_NAME
-#define CONFIG_CEC_OSD_NAME "AML_TV"
-#endif
-
 /*CEC UI MASK*/
 #define CEC_FUNC_MASK                        0
 #define ONE_TOUCH_PLAY_MASK                  1
