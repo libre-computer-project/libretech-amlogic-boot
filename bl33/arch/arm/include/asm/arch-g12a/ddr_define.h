@@ -25,6 +25,7 @@
 #define CONFIG_DDR_TYPE_LPDDR4				2
 #define CONFIG_DDR_TYPE_LPDDR3				3
 #define CONFIG_DDR_TYPE_LPDDR2				4
+#define CONFIG_DDR_TYPE_LPDDR4X				5
 #define CONFIG_DDR_TYPE_AUTO				0xf
 
 /* ddr channel defines */
