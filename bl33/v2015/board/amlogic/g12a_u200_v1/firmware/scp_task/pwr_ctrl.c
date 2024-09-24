@@ -116,15 +116,15 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	p->status = RESPONSE_OK;
 	val = (POWER_KEY_WAKEUP_SRC | AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC |
-	       BT_WAKEUP_SRC | ETH_PHY_GPIO_SRC | CEC_WAKEUP_SRC |
+	       ETH_PHY_GPIO_SRC | CEC_WAKEUP_SRC |
 	       CECB_WAKEUP_SRC);
 
 	p->sources = val;
 
-	/* Power Key: AO_GPIO[3]*/
+	/* Power Key: AO_GPIO[1] UART RX */
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
-	gpio->gpio_in_idx = GPIOAO_3;
+	gpio->gpio_in_idx = GPIOAO_1;
 	gpio->gpio_in_ao = 1;
 	gpio->gpio_out_idx = -1;
 	gpio->gpio_out_ao = -1;
@@ -143,10 +143,10 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
-	/*bt wake host*/
+	/* BOOT_5 Button K11 4.7K Pull Down*/
 	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = BT_WAKEUP_SRC;
-	gpio->gpio_in_idx = GPIOX_18;
+	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+	gpio->gpio_in_idx = BOOT_5;
 	gpio->gpio_in_ao = 0;
 	gpio->gpio_out_idx = -1;
 	gpio->gpio_out_ao = -1;
@@ -191,7 +191,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 
 		if (irq[IRQ_AO_GPIO0] == IRQ_AO_GPIO0_NUM) {
 			irq[IRQ_AO_GPIO0] = 0xFFFFFFFF;
-			if ((readl(AO_GPIO_I) & (1<<3)) == 0)
+			if ((readl(AO_GPIO_I) & (1<<1)) == 0)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
 #if 0
@@ -204,10 +204,8 @@ static unsigned int detect_key(unsigned int suspend_from)
 #endif
 		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;
-			if (!(readl(PREG_PAD_GPIO2_I) & (0x01 << 18))
-					&& (readl(PREG_PAD_GPIO2_O) & (0x01 << 17))
-					&& !(readl(PREG_PAD_GPIO2_EN_N) & (0x01 << 17)))
-				exit_reason = BT_WAKEUP;
+			if (!(readl(PREG_PAD_GPIO0_I) & (0x01 << 5)))
+				exit_reason = POWER_KEY_WAKEUP;
 		}
 
 		if (irq[IRQ_ETH_PTM] == IRQ_ETH_PMT_NUM) {
