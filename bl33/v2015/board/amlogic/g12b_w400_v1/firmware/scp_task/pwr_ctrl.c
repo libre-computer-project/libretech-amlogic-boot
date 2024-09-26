@@ -51,59 +51,90 @@ static void set_vddee_voltage(unsigned int target_voltage)
 
 static void power_off_at_24M(unsigned int suspend_from)
 {
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powering off\n");
+	else
+		uart_puts("suspending\n");
+
+	uart_puts("regulator: 5v");
 	/*set gpioH_8 low to power off vcc 5v*/
 	writel(readl(PREG_PAD_GPIO3_EN_N) & (~(1 << 8)), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
+	uart_puts(" off\n");
 
 	gpio_state_backup(gpio_groups, ARRAY_SIZE(gpio_groups));
 
+	uart_puts("regulator: cpu_a");
 	/*set gpioao_4 low to power off vcck_a*/
 	writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
 	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
+	uart_puts(" off\n");
 
 	if (suspend_from == SYS_POWEROFF){
-		uart_puts("power off\n");
+		uart_puts("regulator: 3v3");
 		/*set test_n low to power off vcck_b & vcc 3.3v*/
 		writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
-	} else {
-		uart_puts("suspend\n");
+		uart_puts(" off\n");
 	}
 
+	uart_puts("regulator: ee");
 	/*step down ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_SLEEP_VOLTAGE);
+	uart_puts(" sleep\n");
+
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powered off\n");
+	else
+		uart_puts("suspended\n");
 }
 
 static void power_on_at_24M(unsigned int suspend_from)
 {
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powering on\n");
+	else
+		uart_puts("resuming\n");
+
+	uart_puts("regulator: ee");
 	/*step up ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE);
+	uart_puts(" init\n");
 
 	if (suspend_from == SYS_POWEROFF){
-		uart_puts("power on\n");
+		uart_puts("regulator: 3v3");
 		/*set test_n high to power on vcck_b & vcc 3.3v*/
 		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
+		uart_puts(" on\n");
 		_udelay(100);
-	} else {
-		uart_puts("resume\n");
 	}
 
+	uart_puts("regulator: cpu_a");
 	/*set gpioao_4 high to power on vcck_a*/
 	writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
 	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
 	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
+	uart_puts(" on\n");
 
 	_udelay(10000);
+
 	gpio_state_restore(gpio_groups, ARRAY_SIZE(gpio_groups));
+
+	uart_puts("regulator: 5v");
 	/*set gpioH_8 low to power on vcc 5v*/
 	writel(readl(PREG_PAD_GPIO3_EN_N) | (1 << 8), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
+	uart_puts(" on\n");
 	_udelay(10000);
 
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powered on\n");
+	else
+		uart_puts("resumed\n");
 }
 
 void get_wakeup_source(void *response, unsigned int suspend_from)

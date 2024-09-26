@@ -40,13 +40,11 @@ static void set_vddee_voltage(unsigned int target_voltage)
 	writel((readl(PREG_PAD_GPIO0_EN_N) | 0x200), PREG_PAD_GPIO0_EN_N);
 	if (((readl(PREG_PAD_GPIO0_EN_N) & 0x200 ) == 0x200) &&
 			((readl(PREG_PAD_GPIO0_I) & 0x200 ) == 0x0)) {
-		uart_puts("use vddee new table!");
-		uart_puts("\n");
+		uart_puts("use vddee new table!\n");
 		pwm_voltage_ee = pwm_voltage_table_ee_new;
 		pwm_size = ARRAY_SIZE(pwm_voltage_table_ee_new);
 	} else {
-		uart_puts("use vddee table!");
-		uart_puts("\n");
+		uart_puts("use vddee table!\n");
 		pwm_voltage_ee = pwm_voltage_table_ee;
 		pwm_size = ARRAY_SIZE(pwm_voltage_table_ee);
 	}
@@ -66,26 +64,47 @@ static void set_vddee_voltage(unsigned int target_voltage)
 
 static void power_off_at_24M(unsigned int suspend_from)
 {
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powering off\n");
+	else
+		uart_puts("suspending\n");
+
+	uart_puts("regulator: 5v");
 	/*set gpioH_8 low to power off vcc 5v*/
 	writel(readl(PREG_PAD_GPIO3_EN_N) & (~(1 << 8)), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
+	uart_puts(" off\n");
 
-	if (suspend_from != SYS_POWEROFF)
-		gpio_state_backup(gpio_groups, ARRAY_SIZE(gpio_groups));
+	gpio_state_backup(gpio_groups, ARRAY_SIZE(gpio_groups));
 
-	/*set test_n low to power off vcck & vcc 3.3v*/
-	writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
-	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
-	writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
+	if (suspend_from == SYS_POWEROFF){
+		uart_puts("regulator: 3v3");
+		/*set test_n low to power off vcck & vcc 3.3v*/
+		writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
+		uart_puts(" off\n");
+	}
 
-	uart_puts((suspend_from == SYS_POWEROFF) ? "power off\n" : "suspend\n");
-
+	uart_puts("regulator: ee");
 	/*step down ee voltage*/
 	set_vddee_voltage(CONFIG_VDDEE_SLEEP_VOLTAGE);
+	uart_puts(" sleep\n");
+
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powered off\n");
+	else
+		uart_puts("suspended\n");
 }
 
 static void power_on_at_24M(unsigned int suspend_from)
 {
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powering on\n");
+	else
+		uart_puts("resuming\n");
+
+	uart_puts("regulator: ee");
 	/*
 	 * sm1 ac200 board share BSP code with g12a_u200_v1
 	 */
@@ -96,22 +115,33 @@ static void power_on_at_24M(unsigned int suspend_from)
 		/*sm1 ac200 step up ee voltage*/
 		set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE_SM1);
 	}
+	uart_puts(" init\n");
 
-	uart_puts((suspend_from == SYS_POWEROFF) ? "power on\n" : "resume\n");
+	if (suspend_from == SYS_POWEROFF){
+		uart_puts("regulator: 3v3");
+		/*set test_n low to power on vcck & vcc 3.3v*/
+		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
+		uart_puts(" on\n");
+		_udelay(100);
+	}
 
-	/*set test_n low to power on vcck & vcc 3.3v*/
-	writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
-	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
-	writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1);
 	_udelay(10000);
 
-	if (suspend_from != SYS_POWEROFF)
-		gpio_state_restore(gpio_groups, ARRAY_SIZE(gpio_groups));
+	gpio_state_restore(gpio_groups, ARRAY_SIZE(gpio_groups));
 
+	uart_puts("regulator: 5v");
 	/*set gpioH_8 low to power on vcc 5v*/
 	writel(readl(PREG_PAD_GPIO3_EN_N) | (1 << 8), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
+	uart_puts(" on\n");
 	_udelay(10000);
+
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powered on\n");
+	else
+		uart_puts("resumed\n");
 }
 
 void get_wakeup_source(void *response, unsigned int suspend_from)
@@ -139,27 +169,29 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
-	/*Eth:GPIOZ_14*/
-	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = ETH_PHY_GPIO_SRC;
-	gpio->gpio_in_idx = GPIOZ_14;
-	gpio->gpio_in_ao = 0;
-	gpio->gpio_out_idx = -1;
-	gpio->gpio_out_ao = -1;
-	gpio->irq = IRQ_GPIO1_NUM;
-	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
-	p->gpio_info_count = ++i;
+	if (suspend_from != SYS_POWEROFF){
+		/*Eth:GPIOZ_14*/
+		gpio = &(p->gpio_info[i]);
+		gpio->wakeup_id = ETH_PHY_GPIO_SRC;
+		gpio->gpio_in_idx = GPIOZ_14;
+		gpio->gpio_in_ao = 0;
+		gpio->gpio_out_idx = -1;
+		gpio->gpio_out_ao = -1;
+		gpio->irq = IRQ_GPIO1_NUM;
+		gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+		p->gpio_info_count = ++i;
 
-	/* BOOT_5 Button K11 4.7K Pull Down*/
-	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
-	gpio->gpio_in_idx = BOOT_5;
-	gpio->gpio_in_ao = 0;
-	gpio->gpio_out_idx = -1;
-	gpio->gpio_out_ao = -1;
-	gpio->irq = IRQ_GPIO0_NUM;
-	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
-	p->gpio_info_count = ++i;
+		/* BOOT_5 Button K11 4.7K Pull Down*/
+		gpio = &(p->gpio_info[i]);
+		gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+		gpio->gpio_in_idx = BOOT_5;
+		gpio->gpio_in_ao = 0;
+		gpio->gpio_out_idx = -1;
+		gpio->gpio_out_ao = -1;
+		gpio->irq = IRQ_GPIO0_NUM;
+		gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+		p->gpio_info_count = ++i;
+	}
 }
 extern void __switch_idle_task(void);
 
