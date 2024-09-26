@@ -28,7 +28,7 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
-#define SUSPEND_EE 0
+#define SUSPEND_EE 1
 #define SUSPEND_CPU_B 1
 
 #if SUSPEND_EE
