@@ -450,16 +450,10 @@ bl2_reg_t __bl2_reg[] = {
 	{AO_PIN_MUX_REG1,     (3 << 16),               (0xF << 16),  0, BL2_INIT_STAGE_PWM_INIT | PWM_CFG1,  0},
 	/* VDDEE init done */
 
-	/* Enable 5V_EN */
-	{GPIO_O_EN_N_REG3,    (1 << 8),                (1 << 8),     0, BL2_INIT_STAGE_1, 0},
-	{GPIO_O_REG3,         (1 << 8),                (1 << 8),   0, BL2_INIT_STAGE_1, 0},
-	/* Enable CPUA ,control by GPIOAO_4 */
-	{AO_GPIO_O_EN_N,    (0 << 4),                (1 << 4),     0, BL2_INIT_STAGE_1, 0},
-	{AO_GPIO_O,         (1 << 4),                (1 << 4),   0, BL2_INIT_STAGE_1, 0},
-	/* Enable VCCK */
+	/* GPIOAO_4 CPU_A */
+	// {AO_GPIO_O_EN_N,    (0 << 10),                (1 << 10),     0, BL2_INIT_STAGE_1, 0},
+	// {AO_GPIO_O,         (1 << 10),                (1 << 10),   0, BL2_INIT_STAGE_1, 0},
+	/* TEST_N EE and VCC3_3V */
 	{AO_SEC_REG0,         (1 << 0),                (1 << 0),     0, BL2_INIT_STAGE_1, 0},
 	{AO_GPIO_O,           (1u << 31),            (1u << 31),  0, BL2_INIT_STAGE_1, 0},
-        /* Enable Green LED on GPIOX_3 by PD, Default PU */
-	{GPIO_O_EN_N_REG2,    (0 << 3),               (1 << 3),    0, BL2_INIT_STAGE_1, 0},
-	{GPIO_O_REG2,         (0 << 3),               (1 << 3),    0, BL2_INIT_STAGE_1, 0},
 };
