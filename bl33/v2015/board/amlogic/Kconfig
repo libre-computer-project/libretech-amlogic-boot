@@ -238,6 +238,10 @@ config G12B_A311D_CM
 	bool "Support amlogic g12b a311d cm board"
 	default n
 
+config G12B_A311D_CM_V01
+	bool "Support amlogic g12b a311d cm v01 board"
+	default n
+
 config G12B_W400_V1
 	bool "Support amlogic g12b w400 v1 board"
 	default n
@@ -642,6 +646,10 @@ endif
 
 if G12B_A311D_CM
 source "board/amlogic/g12b_a311d_cm/Kconfig"
+endif
+
+if G12B_A311D_CM_V01
+source "board/amlogic/g12b_a311d_cm_v01/Kconfig"
 endif
 
 if G12B_W400_V1
