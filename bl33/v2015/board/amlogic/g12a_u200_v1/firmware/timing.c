@@ -534,4 +534,11 @@ bl2_reg_t __bl2_reg[] = {
 	/* GPIOX_3 LED_GREEN ACTIVE_LOW */
 	{GPIO_O_EN_N_REG2,      (0 << 7),               (1 << 7),    0, BL2_INIT_STAGE_1, 0},
 	{GPIO_O_REG2,           (0 << 7),               (1 << 7),    0, BL2_INIT_STAGE_1, 0},
+
+	/* GPIOX_2 VCC_CARD ACTIVE_HIGH */
+	{GPIO_O_REG2,           (1 << 7),               (1 << 7),    0, BL2_INIT_STAGE_1, 0},
+	{GPIO_O_EN_N_REG2,      (0 << 7),               (1 << 7),    0, BL2_INIT_STAGE_1, 0},
+	/* GPIOX_4 VDDIO_C ACTIVE_LOW */
+	{GPIO_O_REG2,           (0 << 7),               (1 << 7),    0, BL2_INIT_STAGE_1, 0},
+	{GPIO_O_EN_N_REG2,      (0 << 7),               (1 << 7),    0, BL2_INIT_STAGE_1, 0},
 };
