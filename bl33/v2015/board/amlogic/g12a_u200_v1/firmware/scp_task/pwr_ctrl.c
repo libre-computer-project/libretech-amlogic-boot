@@ -70,10 +70,14 @@ static void power_off_at_24M(unsigned int suspend_from)
 		uart_puts("suspending\n");
 
 	/* GPIOH_8 5V_EN ACTIVE_HIGH */
+#ifdef S905D3_RESET_ON_SUSPEND_BUG
 	uart_puts("regulator: 5v");
 	writel(readl(PREG_PAD_GPIO3_EN_N) & (~(1 << 8)), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
 	uart_puts(" off\n");
+#else
+	uart_puts("regulator: don't disable 5v\n");
+#endif // S905D3_RESET_ON_SUSPEND_BUG
 
 	gpio_state_backup(gpio_groups, ARRAY_SIZE(gpio_groups));
 
