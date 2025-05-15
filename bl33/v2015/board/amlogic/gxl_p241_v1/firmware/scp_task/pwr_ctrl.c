@@ -57,14 +57,14 @@ void pwm_set_voltage(unsigned int id, unsigned int voltage)
 	case pwm_b:
 		uart_puts("set vddee to 0x");
 		uart_put_hex(pwm_voltage_table[to][1], 16);
-		uart_puts("mv\n");
+		uart_puts(" mv\n");
 		P_PWM_PWM_B = pwm_voltage_table[to][0];
 		break;
 
 	case pwm_d:
 		uart_puts("set vcck to 0x");
 		uart_put_hex(pwm_voltage_table[to][1], 16);
-		uart_puts("mv\n");
+		uart_puts(" mv\n");
 		P_PWM_PWM_D = pwm_voltage_table[to][0];
 		break;
 	default:
@@ -84,34 +84,17 @@ static void hdmi_5v_ctrl(unsigned int ctrl)
 		aml_update_bits(AO_GPIO_O_EN_N, 1 << 25, 0);
 	}
 }
-/*GPIODV_25*/
-static void vcck_ctrl(unsigned int ctrl)
-{
-    return; //p241 don't need vcck control
-	if (ctrl == ON) {
-		aml_update_bits(PREG_PAD_GPIO0_EN_N, 1 << 25, 0);
-		aml_update_bits(PREG_PAD_GPIO0_O, 1 << 25, 1 << 25);
-		/* after power on vcck, should init vcck*/
-		_udelay(5000);
-		pwm_set_voltage(pwm_d, CONFIG_VCCK_INIT_VOLTAGE);
-	} else {
-		aml_update_bits(PREG_PAD_GPIO0_EN_N, 1 << 25, 0);
-		aml_update_bits(PREG_PAD_GPIO0_O, 1 << 25, 0);
-	}
-}
 
 static void power_off_at_clk81(void)
 {
-	hdmi_5v_ctrl(OFF);
-	vcck_ctrl(OFF);
+	hdmi_5v_ctrl(OFF); // VCCK VDDCPU
 	pwm_set_voltage(pwm_b, CONFIG_VDDEE_SLEEP_VOLTAGE);
 	/* reduce power */
 }
 static void power_on_at_clk81(void)
 {
 	pwm_set_voltage(pwm_b, CONFIG_VDDEE_INIT_VOLTAGE);
-	vcck_ctrl(ON);
-	hdmi_5v_ctrl(ON);
+	hdmi_5v_ctrl(ON); // VCCK VDDCPU
 }
 
 static void power_off_at_24M(void)
@@ -138,6 +121,10 @@ static void power_on_at_32k(void)
 {
 }
 
+unsigned long boot_pinmux;
+unsigned long boot_pullen;
+unsigned long boot_pullup;
+
 void get_wakeup_source(void *response, unsigned int suspend_from)
 {
 	struct wakeup_info *p = (struct wakeup_info *)response;
@@ -147,13 +134,29 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	p->status = RESPONSE_OK;
 	val = (POWER_KEY_WAKEUP_SRC | AUTO_WAKEUP_SRC | REMOTE_WAKEUP_SRC |
-	       ETH_PHY_WAKEUP_SRC | BT_WAKEUP_SRC | CEC_WAKEUP_SRC);
+	       ETH_PHY_WAKEUP_SRC);
+#ifdef CONFIG_CEC_WAKEUP
+	if (suspend_from != SYS_POWEROFF)
+		val |= CEC_WAKEUP_SRC;
+#endif
+
 	p->sources = val;
 
-	/* Power Key: AO_GPIO[3]*/
+
+	boot_pinmux = readl(P_PERIPHS_PIN_MUX_7);
+	if (boot_pinmux & (0x01<<13)){
+		writel(boot_pinmux & (~(0x01<<13)), P_PERIPHS_PIN_MUX_7);
+		boot_pullen = readl(P_PAD_PULL_UP_EN_REG2);
+		writel(boot_pullen | (0x01<<11), P_PAD_PULL_UP_EN_REG2);
+		boot_pullup = readl(P_PAD_PULL_UP_REG2);
+		writel(boot_pullup | (0x01<<11), P_PAD_PULL_UP_REG2);
+		uart_puts("boot_11 saved state\n");
+	}
+
+	/* Power Key: GPIOAO_1 UART_RX*/
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
-	gpio->gpio_in_idx = GPIOAO_2;
+	gpio->gpio_in_idx = GPIOAO_1;
 	gpio->gpio_in_ao = 1;
 	gpio->gpio_out_idx = -1;
 	gpio->gpio_out_ao = -1;
@@ -161,9 +164,10 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
+	/* Power Key: BOOT[11]*/
 	gpio = &(p->gpio_info[i]);
-	gpio->wakeup_id = BT_WAKEUP_SRC;
-	gpio->gpio_in_idx = GPIOX_13;
+	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+	gpio->gpio_in_idx = BOOT_11;
 	gpio->gpio_in_ao = 0;
 	gpio->gpio_out_idx = -1;
 	gpio->gpio_out_ao = -1;
@@ -217,6 +221,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 	do {
 #ifdef CONFIG_CEC_WAKEUP
 		if (irq[IRQ_AO_CEC] == IRQ_AO_CEC_NUM) {
+			uart_puts("irq cec\n");
 			irq[IRQ_AO_CEC] = 0xFFFFFFFF;
 			if (cec_msg.log_addr) {
 				if (hdmi_cec_func_config & 0x1) {
@@ -233,6 +238,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 		}
 #endif
 		if (irq[IRQ_TIMERA] == IRQ_TIMERA_NUM) {
+			uart_puts("irq timera\n");
 			irq[IRQ_TIMERA] = 0xFFFFFFFF;
 			if (time_out_ms != 0)
 				time_out_ms--;
@@ -243,6 +249,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 		}
 
 		if (irq[IRQ_AO_IR_DEC] == IRQ_AO_IR_DEC_NUM) {
+			uart_puts("irq aoir\n");
 			irq[IRQ_AO_IR_DEC] = 0xFFFFFFFF;
 			ret = remote_detect_key();
 			if (ret == 1)
@@ -252,24 +259,32 @@ static unsigned int detect_key(unsigned int suspend_from)
 		}
 
 		if (irq[IRQ_AO_GPIO0] == IRQ_AO_GPIO0_NUM) {
+			uart_puts("irq ao gpio0\n");
 			irq[IRQ_AO_GPIO0] = 0xFFFFFFFF;
-			if ((readl(AO_GPIO_I) & (1<<2)) == 0)
+			if ((readl(AO_GPIO_I) & (1<<1)) == 0)
 				exit_reason = POWER_KEY_WAKEUP;
 		}
 		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
+			uart_puts("irq gpio0\n");
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;
-			if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 13))
-				&& (readl(PREG_PAD_GPIO4_O) & (0x01 << 12))
-				&& !(readl(PREG_PAD_GPIO4_EN_N) & (0x01 << 12)))
-				exit_reason = BT_WAKEUP;
+			if ((readl(PREG_PAD_GPIO2_I) & (0x01 << 11)) == 0)
+				exit_reason = POWER_KEY_WAKEUP;
 		}
 		if (irq[IRQ_ETH_PHY] == IRQ_ETH_PHY_NUM) {
+			uart_puts("irq eth\n");
 			irq[IRQ_ETH_PHY] = 0xFFFFFFFF;
 				exit_reason = ETH_PHY_WAKEUP;
 		}
-		if (exit_reason)
+
+		if (exit_reason){
+			if (boot_pinmux & (0x01<<13)){
+				writel(boot_pinmux | (0x01<<13), P_PERIPHS_PIN_MUX_7);
+				writel((readl(P_PAD_PULL_UP_EN_REG2) & (~(0x01<<11))) | (boot_pullen & (0x01<<11)), P_PAD_PULL_UP_EN_REG2);
+				writel((readl(P_PAD_PULL_UP_REG2) & (~(0x01<<11))) | (boot_pullup & (0x01<<11)), P_PAD_PULL_UP_REG2);
+				uart_puts("boot_11 restored state\n");
+			}
 			break;
-		else
+		} else
 			asm volatile("wfi");
 	} while (1);
 
