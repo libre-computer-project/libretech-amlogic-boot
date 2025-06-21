@@ -69,15 +69,17 @@ static void power_off_at_24M(unsigned int suspend_from)
 	else
 		uart_puts("suspending\n");
 
-	/* GPIOH_8 5V_EN ACTIVE_HIGH */
 #ifdef S905D3_RESET_ON_SUSPEND_BUG
+	/* GPIOH_8 5V_EN ACTIVE_HIGH */
 	uart_puts("regulator: 5v");
 	writel(readl(PREG_PAD_GPIO3_EN_N) & (~(1 << 8)), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
 	uart_puts(" off\n");
 #else
-	uart_puts("regulator: don't disable 5v\n");
-#endif // S905D3_RESET_ON_SUSPEND_BUG
+	/* GPIOH_8 5V_EN VCC5V USB_TYPE_A GPIO_HEADER_5V DIO HDMI_5V */
+	/* 5V needed for CEC */
+	uart_puts("regulator: 5v keep\n");
+#endif
 
 	gpio_state_backup(gpio_groups, ARRAY_SIZE(gpio_groups));
 
@@ -133,12 +135,14 @@ static void power_on_at_24M(unsigned int suspend_from)
 
 	gpio_state_restore(gpio_groups, ARRAY_SIZE(gpio_groups));
 
+#ifdef S905D3_RESET_ON_SUSPEND_BUG
 	/* GPIOH_8 5V_EN ACTIVE_HIGH */
 	uart_puts("regulator: 5v");
 	writel(readl(PREG_PAD_GPIO3_EN_N) | (1 << 8), PREG_PAD_GPIO3_EN_N);
 	writel(readl(PERIPHS_PIN_MUX_C) & (~(0xf)), PERIPHS_PIN_MUX_C);
 	uart_puts(" on\n");
 	_udelay(10000);
+#endif
 
 	if (suspend_from == SYS_POWEROFF)
 		uart_puts("powered on\n");
