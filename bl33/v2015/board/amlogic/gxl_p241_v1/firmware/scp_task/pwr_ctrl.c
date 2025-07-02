@@ -57,14 +57,14 @@ void pwm_set_voltage(unsigned int id, unsigned int voltage)
 	case pwm_b:
 		uart_puts("set vddee to 0x");
 		uart_put_hex(pwm_voltage_table[to][1], 16);
-		uart_puts(" mv\n");
+		uart_puts("mv\n");
 		P_PWM_PWM_B = pwm_voltage_table[to][0];
 		break;
 
 	case pwm_d:
 		uart_puts("set vcck to 0x");
 		uart_put_hex(pwm_voltage_table[to][1], 16);
-		uart_puts(" mv\n");
+		uart_puts("mv\n");
 		P_PWM_PWM_D = pwm_voltage_table[to][0];
 		break;
 	default:
@@ -142,7 +142,6 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	p->sources = val;
 
-
 	boot_pinmux = readl(P_PERIPHS_PIN_MUX_7);
 	if (boot_pinmux & (0x01<<13)){
 		writel(boot_pinmux & (~(0x01<<13)), P_PERIPHS_PIN_MUX_7);
@@ -164,7 +163,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
-	/* Power Key: BOOT[11]*/
+	/* Power Key: BOOT_11 */
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
 	gpio->gpio_in_idx = BOOT_11;
@@ -172,7 +171,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->gpio_out_idx = -1;
 	gpio->gpio_out_ao = -1;
 	gpio->irq = IRQ_GPIO0_NUM;
-	gpio->trig_type	= GPIO_IRQ_FALLING_EDGE;
+	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 }
 void wakeup_timer_setup(void)
@@ -213,6 +212,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 	remote_cec_hw_reset();
 #ifdef CONFIG_CEC_WAKEUP
 	if (hdmi_cec_func_config & 0x1) {
+		remote_cec_hw_reset();
 		cec_node_init();
 	}
 #endif
@@ -266,6 +266,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 			uart_puts("irq ao gpio0\n");
 			irq[IRQ_AO_GPIO0] = 0xFFFFFFFF;
 		}
+
 		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
 			uart_puts("irq gpio0\n");
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;

@@ -153,7 +153,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	p->sources = val;
 
-	/* Power Key: GPIOAO_1 */
+	/* Power Key: GPIOAO_1 UART_RX*/
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
 	gpio->gpio_in_idx = GPIOAO_1;
@@ -174,7 +174,6 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->irq = IRQ_GPIO0_NUM;
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
-
 }
 void wakeup_timer_setup(void)
 {
@@ -199,11 +198,6 @@ static unsigned int detect_key(unsigned int suspend_from)
 	unsigned int time_out = readl(AO_DEBUG_REG2);
 	unsigned time_out_ms = time_out*100;
 	unsigned int ret;
-#ifdef CONFIG_BT_WAKEUP
-	int cnt = 0;
-	int flag_p = 0;
-	int flag_n = 0;
-#endif
 	unsigned *irq = (unsigned *)WAKEUP_SRC_IRQ_ADDR_BASE;
 	/* unsigned *wakeup_en = (unsigned *)SECURE_TASK_RESPONSE_WAKEUP_EN; */
 
@@ -285,6 +279,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 			irq[IRQ_ETH_PHY] = 0xFFFFFFFF;
 				exit_reason = ETH_PHY_WAKEUP;
 		}
+
 		if (exit_reason)
 			break;
 		else
