@@ -71,14 +71,14 @@ static void power_off_at_24M(unsigned int suspend_from)
 		uart_puts(" off\n");
 	}
 
-	/* GPIOAO_4 */
-	uart_puts("regulator: cpu_b");
-	writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
-	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
-	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
-	uart_puts(" off\n");
-
 	if (suspend_from == SYS_POWEROFF){
+		/* GPIOAO_4 */
+		uart_puts("regulator: cpu_b");
+		writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
+		uart_puts(" off\n");
+
 		/* TEST_N low to turn off VCC3V3 */
 		/* VDDEE VCC3V3 VCC1V8 EMMC CVBS RED_LED */
 		uart_puts("regulator: vddee and vcc3v3");
@@ -121,14 +121,14 @@ static void power_on_at_24M(unsigned int suspend_from)
 		uart_puts(" init\n");
 	}
 
-	/* GPIOAO_4 */
-	uart_puts("regulator: cpu_b");
-	writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
-	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
-	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
-	uart_puts(" on\n");
-
 	if (is_cpu_id_g12b()) {
+		/* GPIOAO_4 */
+		uart_puts("regulator: cpu_b");
+		writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG);
+		uart_puts(" on\n");
+
 		/* GPIOAO_10 */
 		uart_puts("regulator: cpu_a");
 		writel(readl(AO_GPIO_O) | (1 << 10), AO_GPIO_O);
