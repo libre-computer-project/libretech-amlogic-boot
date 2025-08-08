@@ -300,16 +300,7 @@ ddr_reg_t __ddr_reg[] = {
 };
 
 #define VCCK_VAL				CONFIG_VCCK_INIT_VOLTAGE
-/*
- * sm1 ac200 board share BSP code with g12a_u200_v1
- */
-#ifdef CONFIG_SM1_AC200_V1
 #define VDDEE_VAL				CONFIG_VDDEE_INIT_VOLTAGE_SM1
-#else
-#define VDDEE_VAL				CONFIG_VDDEE_INIT_VOLTAGE
-#endif
-/* VCCK PWM table, SM1 VCCK supports 36 step voltage, g12a vcck supports 30 step voltage */
-#ifdef CONFIG_SM1_AC200_V1
 #if   (VCCK_VAL == 700)
 	#define VCCK_VAL_REG	0x00220000
 #elif (VCCK_VAL == 710)
@@ -383,69 +374,6 @@ ddr_reg_t __ddr_reg[] = {
 #else
 	#error "VCCK val out of range\n"
 #endif
-#else
-#if   (VCCK_VAL == 730)
-	#define VCCK_VAL_REG	0x001c0000
-#elif (VCCK_VAL == 740)
-	#define VCCK_VAL_REG	0x001b0001
-#elif (VCCK_VAL == 750)
-	#define VCCK_VAL_REG	0x001a0002
-#elif (VCCK_VAL == 760)
-	#define VCCK_VAL_REG	0x00190003
-#elif (VCCK_VAL == 770)
-	#define VCCK_VAL_REG	0x00180004
-#elif (VCCK_VAL == 780)
-	#define VCCK_VAL_REG	0x00170005
-#elif (VCCK_VAL == 790)
-	#define VCCK_VAL_REG	0x00160006
-#elif (VCCK_VAL == 800)
-	#define VCCK_VAL_REG	0x00150007
-#elif (VCCK_VAL == 810)
-	#define VCCK_VAL_REG	0x00140008
-#elif (VCCK_VAL == 820)
-	#define VCCK_VAL_REG	0x00130009
-#elif (VCCK_VAL == 830)
-	#define VCCK_VAL_REG	0x0012000a
-#elif (VCCK_VAL == 840)
-	#define VCCK_VAL_REG	0x0011000b
-#elif (VCCK_VAL == 850)
-	#define VCCK_VAL_REG	0x0010000c
-#elif (VCCK_VAL == 860)
-	#define VCCK_VAL_REG	0x000f000d
-#elif (VCCK_VAL == 870)
-	#define VCCK_VAL_REG	0x000e000e
-#elif (VCCK_VAL == 880)
-	#define VCCK_VAL_REG	0x000d000f
-#elif (VCCK_VAL == 890)
-	#define VCCK_VAL_REG	0x000c0010
-#elif (VCCK_VAL == 900)
-	#define VCCK_VAL_REG	0x000b0011
-#elif (VCCK_VAL == 910)
-	#define VCCK_VAL_REG	0x000a0012
-#elif (VCCK_VAL == 920)
-	#define VCCK_VAL_REG	0x00090013
-#elif (VCCK_VAL == 930)
-	#define VCCK_VAL_REG	0x00080014
-#elif (VCCK_VAL == 940)
-	#define VCCK_VAL_REG	0x00070015
-#elif (VCCK_VAL == 950)
-	#define VCCK_VAL_REG	0x00060016
-#elif (VCCK_VAL == 960)
-	#define VCCK_VAL_REG	0x00050017
-#elif (VCCK_VAL == 970)
-	#define VCCK_VAL_REG	0x00040018
-#elif (VCCK_VAL == 980)
-	#define VCCK_VAL_REG	0x00030019
-#elif (VCCK_VAL == 990)
-	#define VCCK_VAL_REG	0x0002001a
-#elif (VCCK_VAL == 1000)
-	#define VCCK_VAL_REG	0x0001001b
-#elif (VCCK_VAL == 1010)
-	#define VCCK_VAL_REG	0x0000001c
-#else
-	#error "VCCK val out of range\n"
-#endif
-#endif
 
 /* VDDEE_VAL_REG0: VDDEE PWM table  0.67v-0.97v*/
 /* VDDEE_VAL_REG1: VDDEE PWM table  0.69v-0.89v*/
@@ -511,7 +439,7 @@ bl2_reg_t __bl2_reg[] = {
 
 	/* step2: match PWM config */
 	/* GPIO9[BIT7]=H use PWM_CFG0(0.67v-0.97v), =L use PWM_CFG1(0.69v-0.89v) */
-	{0x1,                 PWM_CFG0,                0,            0, BL2_INIT_STAGE_PWM_CFG_GROUP,        0},
+	{0x1,                 PWM_CFG1,                0,            0, BL2_INIT_STAGE_PWM_CFG_GROUP,        0},
 	{0x0,                 PWM_CFG1,                0,            0, BL2_INIT_STAGE_PWM_CFG_GROUP,        0},
 
 	/* step3: config PWM */
