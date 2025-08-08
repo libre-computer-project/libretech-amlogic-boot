@@ -17,6 +17,7 @@
 
 #define MESON_CPU_MAJOR_ID_G12B		0x29
 #define MESON_CPU_MAJOR_ID_SM1		0x2B
+#define CPU_B_OFF			0
 
 unsigned char gpio_groups[] = {};
 
@@ -72,11 +73,13 @@ static void power_off_at_24M(unsigned int suspend_from)
 	}
 
 	/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
-	uart_puts("regulator: cpu_b");
-	writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
-	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
-	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
-	uart_puts(" off\n");
+	if (CPU_B_OFF) {
+		uart_puts("regulator: cpu_b");
+		writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
+		uart_puts(" off\n");
+	}
 
 	if (suspend_from == SYS_POWEROFF){
 		/* EE TEST_N GPIOE_0 PWMAO_B */
@@ -120,11 +123,13 @@ static void power_on_at_24M(unsigned int suspend_from)
 	}
 
 	/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
-	uart_puts("regulator: cpu_b");
-	writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
-	writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
-	writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
-	uart_puts(" on\n");
+	if (CPU_B_OFF) {
+		uart_puts("regulator: cpu_b");
+		writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
+		uart_puts(" on\n");
+	}
 
 	if (is_cpu_id_g12b()) {
 		/* CPU_A GPIOAO_10 GPIOE_2 PWM_A A311D Only */
