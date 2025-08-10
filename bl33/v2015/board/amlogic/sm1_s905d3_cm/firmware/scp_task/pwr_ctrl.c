@@ -141,11 +141,11 @@ static void power_on_at_24M(unsigned int suspend_from)
 		uart_puts(" on\n");
 	}
 
-	_udelay(10000);
 
 	if (suspend_from == SYS_POWEROFF)
 		uart_puts("powered on\n");
 	else {
+		_udelay(10000);
 		uart_puts("gpio: restore state\n");
 		gpio_state_restore(gpio_groups, ARRAY_SIZE(gpio_groups));
 		uart_puts("resumed\n");
