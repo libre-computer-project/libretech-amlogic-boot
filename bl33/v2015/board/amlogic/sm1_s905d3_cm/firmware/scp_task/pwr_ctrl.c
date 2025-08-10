@@ -17,7 +17,7 @@
 
 #define MESON_CPU_MAJOR_ID_G12B		0x29
 #define MESON_CPU_MAJOR_ID_SM1		0x2B
-#define CPU_B_OFF			1
+#define POWEROFF_VDDEE			0
 
 unsigned char gpio_groups[] = {};
 
@@ -72,22 +72,23 @@ static void power_off_at_24M(unsigned int suspend_from)
 		uart_puts(" off\n");
 	}
 
-	/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
-	if (CPU_B_OFF) {
+	if (suspend_from == SYS_POWEROFF){
+		/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
 		uart_puts("regulator: cpu_b");
 		writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
 		uart_puts(" off\n");
-	}
 
-	if (suspend_from == SYS_POWEROFF){
-		/* EE TEST_N GPIOE_0 PWMAO_B */
-		uart_puts("regulator: vddee and vcc3v3");
-		writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
-		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
-		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1); /* TEST_N*/
-		uart_puts(" off\n");
+		if (POWEROFF_VDDEE){
+			/* EE TEST_N GPIOE_0 PWMAO_B */
+			uart_puts("regulator: vddee and vcc3v3");
+			writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
+			writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
+			writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1); /* TEST_N*/
+			uart_puts(" off\n");
+		}
+
 		uart_puts("powered off\n");
 	} else {
 		/*step down ee voltage*/
@@ -106,13 +107,22 @@ static void power_on_at_24M(unsigned int suspend_from)
 		uart_puts("resuming\n");
 
 	if (suspend_from == SYS_POWEROFF){
-		/* EE TEST_N GPIOE_0 PWMAO_B */
-		uart_puts("regulator: vddee and vcc3v3");
-		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
-		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
-		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1); /* TEST_N */
+		if (POWEROFF_VDDEE){
+			/* EE TEST_N GPIOE_0 PWMAO_B */
+			uart_puts("regulator: vddee and vcc3v3");
+			writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
+			writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
+			writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1); /* TEST_N */
+			uart_puts(" on\n");
+			_udelay(100);
+		}
+
+		/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
+		uart_puts("regulator: cpu_b");
+		writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
 		uart_puts(" on\n");
-		_udelay(100);
 
 		uart_puts("powered on\n");
 	} else {
@@ -120,15 +130,6 @@ static void power_on_at_24M(unsigned int suspend_from)
 		uart_puts("regulator: vddee");
 		set_vddee_voltage(CONFIG_VDDEE_INIT_VOLTAGE_SM1);
 		uart_puts(" init\n");
-	}
-
-	/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
-	if (CPU_B_OFF) {
-		uart_puts("regulator: cpu_b");
-		writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
-		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
-		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
-		uart_puts(" on\n");
 	}
 
 	if (is_cpu_id_g12b()) {
@@ -139,9 +140,9 @@ static void power_on_at_24M(unsigned int suspend_from)
 		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 8)), AO_RTI_PIN_MUX_REG1); /* GPIOAO_10 */
 		uart_puts(" on\n");
 	}
-	
+
 	_udelay(10000);
-	
+
 	if (suspend_from == SYS_POWEROFF)
 		uart_puts("powered on\n");
 	else {
@@ -175,7 +176,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 
 	p->sources = val;
 
-	/* Power Key: GPIOAO_1 UART_RX */
+	/* GPIOAO_1 UART_RX */
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
 	gpio->gpio_in_idx = GPIOAO_1;
@@ -186,7 +187,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
-	/*Eth:GPIOZ_14*/
+	/* GPIOZ_14 ETH WOL PMEB */
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = ETH_PHY_GPIO_SRC;
 	gpio->gpio_in_idx = GPIOZ_14;
@@ -197,7 +198,7 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 
-	/* BOOT_5 Button K11 4.7K Pull Down*/
+	/* BOOT_5 BOOT_SEL */
 	gpio = &(p->gpio_info[i]);
 	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
 	gpio->gpio_in_idx = BOOT_5;
@@ -205,6 +206,17 @@ void get_wakeup_source(void *response, unsigned int suspend_from)
 	gpio->gpio_out_idx = -1;
 	gpio->gpio_out_ao = -1;
 	gpio->irq = IRQ_GPIO1_NUM;
+	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
+	p->gpio_info_count = ++i;
+
+	/* GPIOX_7 RUN_PG */
+	gpio = &(p->gpio_info[i]);
+	gpio->wakeup_id = POWER_KEY_WAKEUP_SRC;
+	gpio->gpio_in_idx = GPIOX_7;
+	gpio->gpio_in_ao = 0;
+	gpio->gpio_out_idx = -1;
+	gpio->gpio_out_ao = -1;
+	gpio->irq = IRQ_GPIO2_NUM;
 	gpio->trig_type = GPIO_IRQ_FALLING_EDGE;
 	p->gpio_info_count = ++i;
 }
@@ -261,6 +273,7 @@ static unsigned int detect_key(unsigned int suspend_from)
 				uart_puts("irq UART_RX\n");
 		}
 
+		/* GPIOZ_14 ETH WOL PMEB */
 		if (irq[IRQ_GPIO0] == IRQ_GPIO0_NUM) {
 			irq[IRQ_GPIO0] = 0xFFFFFFFF;
 			if (!(readl(PREG_PAD_GPIO4_I) & (0x01 << 14))
@@ -271,14 +284,24 @@ static unsigned int detect_key(unsigned int suspend_from)
 				uart_puts("irq ETH_PHY\n");
 		}
 
-		/* BOOT_5 VDDIO_BOOT is powered off during shutdown */
+		/* BOOT_5 BOOT_SEL */
 		if (irq[IRQ_GPIO1] == IRQ_GPIO1_NUM) {
 			irq[IRQ_GPIO1] = 0xFFFFFFFF;
 			if (!(readl(PREG_PAD_GPIO0_I) & (0x01 << 5))){
 				exit_reason = POWER_KEY_WAKEUP;
-				uart_puts("wake BUTTON\n");
+				uart_puts("wake BOOT_SEL\n");
 			} else
-				uart_puts("irq BUTTON\n");
+				uart_puts("irq BOOT_SEL\n");
+		}
+
+		/* GPIOX_7 RUN_PG */
+		if (irq[IRQ_GPIO2] == IRQ_GPIO2_NUM) {
+			irq[IRQ_GPIO2] = 0xFFFFFFFF;
+			if (!(readl(PREG_PAD_GPIO2_I) & (0x01 << 7))){
+				exit_reason = POWER_KEY_WAKEUP;
+				uart_puts("wake RUN_PG\n");
+			} else
+				uart_puts("irq RUN_PG\n");
 		}
 
 		if (irq[IRQ_ETH_PTM] == IRQ_ETH_PMT_NUM) {
