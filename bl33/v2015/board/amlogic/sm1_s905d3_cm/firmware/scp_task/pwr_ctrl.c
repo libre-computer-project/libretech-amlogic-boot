@@ -17,7 +17,7 @@
 
 #define MESON_CPU_MAJOR_ID_G12B		0x29
 #define MESON_CPU_MAJOR_ID_SM1		0x2B
-#define CPU_B_OFF			0
+#define CPU_B_OFF			1
 
 unsigned char gpio_groups[] = {};
 
