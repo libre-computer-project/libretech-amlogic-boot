@@ -123,8 +123,6 @@ static void power_on_at_24M(unsigned int suspend_from)
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
 		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
 		uart_puts(" on\n");
-
-		uart_puts("powered on\n");
 	} else {
 		/*sm1 ac200 step up ee voltage*/
 		uart_puts("regulator: vddee");
