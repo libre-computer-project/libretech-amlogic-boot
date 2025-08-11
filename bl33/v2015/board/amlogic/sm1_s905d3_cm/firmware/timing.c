@@ -278,7 +278,7 @@ bl2_reg_t __bl2_reg[] = {
 	{AO_PIN_MUX_REG1,     (3 << 20),               (0xF << 20),  0, BL2_INIT_STAGE_1, 0},
 
 	/* set BOOT_9 input */
-	//{PAD_PULL_UP_EN_REG0, 1 << 9,			1 << 9,   0, BL2_INIT_STAGE_1, 0},
+	{PAD_PULL_UP_EN_REG0, 1 << 9,			1 << 9,   0, BL2_INIT_STAGE_1, 0},
 
 	/* PWM_AO_B */
 	/* VDDEE init start */
