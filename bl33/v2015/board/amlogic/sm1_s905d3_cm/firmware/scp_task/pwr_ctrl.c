@@ -17,6 +17,9 @@
 
 #define MESON_CPU_MAJOR_ID_G12B		0x29
 #define MESON_CPU_MAJOR_ID_SM1		0x2B
+#define POWEROFF_CPUA			1
+#define POWEROFF_CPUB			1
+#define POWEROFF_CPUB_SUSPEND		0
 #define POWEROFF_VDDEE			0
 
 unsigned char gpio_groups[] = {};
@@ -64,7 +67,7 @@ static void power_off_at_24M(unsigned int suspend_from)
 	}
 
 	/* CPU_A GPIOAO_10 GPIOE_2 PWM_A A311D Only */
-	if (is_cpu_id_g12b()) {
+	if (POWEROFF_CPUA && is_cpu_id_g12b()) {
 		uart_puts("regulator: cpu_a");
 		writel(readl(AO_GPIO_O) & (~(1 << 10)), AO_GPIO_O);
 		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 10)), AO_GPIO_O_EN_N);
@@ -72,31 +75,35 @@ static void power_off_at_24M(unsigned int suspend_from)
 		uart_puts(" off\n");
 	}
 
-	if (suspend_from == SYS_POWEROFF){
-		/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
-		uart_puts("regulator: cpu_b");
-		writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
-		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
-		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
-		uart_puts(" off\n");
-
-		if (POWEROFF_VDDEE){
-			/* EE TEST_N GPIOE_0 PWMAO_B */
-			uart_puts("regulator: vddee and vcc3v3");
-			writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
-			writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
-			writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1); /* TEST_N*/
+	if (POWEROFF_CPUB){
+		if (POWEROFF_CPUB_SUSPEND || suspend_from == SYS_POWEROFF){
+			/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
+			uart_puts("regulator: cpu_b");
+			writel(readl(AO_GPIO_O) & (~(1 << 4)), AO_GPIO_O);
+			writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
+			writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
 			uart_puts(" off\n");
 		}
+	}
 
-		uart_puts("powered off\n");
+	if (POWEROFF_VDDEE && suspend_from == SYS_POWEROFF){
+		/* EE TEST_N GPIOE_0 PWMAO_B */
+		uart_puts("regulator: vddee and vcc3v3");
+		writel(readl(AO_GPIO_O) & (~(1 << 31)), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1); /* TEST_N*/
+		uart_puts(" off\n");
 	} else {
 		/*step down ee voltage*/
 		uart_puts("regulator: vddee");
 		set_vddee_voltage(CONFIG_VDDEE_SLEEP_VOLTAGE);
 		uart_puts(" low\n");
-		uart_puts("suspended\n");
 	}
+
+	if (suspend_from == SYS_POWEROFF)
+		uart_puts("powered off\n");
+	else
+		uart_puts("suspended\n");
 }
 
 static void power_on_at_24M(unsigned int suspend_from)
@@ -106,23 +113,14 @@ static void power_on_at_24M(unsigned int suspend_from)
 	else
 		uart_puts("resuming\n");
 
-	if (suspend_from == SYS_POWEROFF){
-		if (POWEROFF_VDDEE){
-			/* EE TEST_N GPIOE_0 PWMAO_B */
-			uart_puts("regulator: vddee and vcc3v3");
-			writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
-			writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
-			writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1); /* TEST_N */
-			uart_puts(" on\n");
-			_udelay(100);
-		}
-
-		/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
-		uart_puts("regulator: cpu_b");
-		writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
-		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
-		writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
+	if (POWEROFF_VDDEE && suspend_from == SYS_POWEROFF){
+		/* EE TEST_N GPIOE_0 PWMAO_B */
+		uart_puts("regulator: vddee and vcc3v3");
+		writel(readl(AO_GPIO_O) | (1 << 31), AO_GPIO_O);
+		writel(readl(AO_GPIO_O_EN_N) & (~(1 << 31)), AO_GPIO_O_EN_N);
+		writel(readl(AO_RTI_PIN_MUX_REG1) & (~(0xf << 28)), AO_RTI_PIN_MUX_REG1); /* TEST_N */
 		uart_puts(" on\n");
+		_udelay(100);
 	} else {
 		/*sm1 ac200 step up ee voltage*/
 		uart_puts("regulator: vddee");
@@ -130,7 +128,18 @@ static void power_on_at_24M(unsigned int suspend_from)
 		uart_puts(" init\n");
 	}
 
-	if (is_cpu_id_g12b()) {
+	if (POWEROFF_CPUB){
+		if (POWEROFF_CPUB_SUSPEND || suspend_from == SYS_POWEROFF){
+			/* CPU_B GPIOAO_4 GPIOE_1 PWMAO_D */
+			uart_puts("regulator: cpu_b");
+			writel(readl(AO_GPIO_O) | (1 << 4), AO_GPIO_O);
+			writel(readl(AO_GPIO_O_EN_N) & (~(1 << 4)), AO_GPIO_O_EN_N);
+			writel(readl(AO_RTI_PIN_MUX_REG) & (~(0xf << 16)), AO_RTI_PIN_MUX_REG); /* GPIOAO_4 */
+			uart_puts(" on\n");
+		}
+	}
+
+	if (POWEROFF_CPUA && is_cpu_id_g12b()) {
 		/* CPU_A GPIOAO_10 GPIOE_2 PWM_A A311D Only */
 		uart_puts("regulator: cpu_a");
 		writel(readl(AO_GPIO_O) | (1 << 10), AO_GPIO_O);
